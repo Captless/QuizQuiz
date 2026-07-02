@@ -1,21 +1,18 @@
 {
   "name": "quikquiz",
   "version": "1.0.0",
+  "private": true,
   "description": "AI-powered quiz generator for teachers and trainers",
-  "main": "server.js",
+  "workspaces": ["client", "server"],
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "npm -w client run dev",
+    "dev:server": "node server/index.js",
+    "build": "npm -w client run build",
+    "start": "node server/index.js",
+    "lint": "npm -w client run lint"
   },
-  "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.1",
-    "express-async-errors": "^3.1.1",
-    "jsonrepair": "^3.14.1",
-    "jszip": "^3.10.1",
-    "multer": "^2.2.0",
-    "pdf-parse": "^2.4.5",
-    "stripe": "^17.5.0"
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   }
 }
