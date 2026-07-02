@@ -235,21 +235,24 @@ function createQuizStackEntry(questions, topic, difficulty, timerSeconds, format
   const deleteBtn = document.createElement('button');
   deleteBtn.className = 'btn btn-sm btn-outline entry-delete-btn';
   deleteBtn.title = 'Delete quiz';
-  deleteBtn.textContent = '🗑️';
+  deleteBtn.textContent = 'Delete';
   deleteBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     if (!confirm('Delete this quiz?')) return;
     card.remove();
     const idx = quizStack.indexOf(entry);
     if (idx > -1) quizStack.splice(idx, 1);
-    if (quizStack.length === 0) document.getElementById('quizArea').classList.remove('active');
+    if (quizStack.length === 0) {
+      document.getElementById('quizArea').classList.remove('active');
+      document.getElementById('quizStackEmpty').classList.remove('hidden');
+    }
   });
   actions.appendChild(deleteBtn);
 
   const pdfBtn = document.createElement('button');
   pdfBtn.className = 'btn btn-sm btn-outline entry-pdf-btn';
   pdfBtn.title = 'Download Quiz (PDF)';
-  pdfBtn.textContent = '📄';
+  pdfBtn.textContent = 'PDF';
   pdfBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     exportQuizPDF(entry, false);
@@ -272,7 +275,7 @@ function createQuizStackEntry(questions, topic, difficulty, timerSeconds, format
   const resultsBtn = document.createElement('button');
   resultsBtn.className = 'btn btn-sm btn-outline entry-results-btn';
   resultsBtn.title = 'View student results';
-  resultsBtn.textContent = '📊';
+  resultsBtn.textContent = 'Results';
   resultsBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     showResultsModal(entry);
@@ -282,7 +285,7 @@ function createQuizStackEntry(questions, topic, difficulty, timerSeconds, format
   const shareBtn = document.createElement('button');
   shareBtn.className = 'btn btn-sm btn-outline entry-share-btn';
   shareBtn.title = 'Copy share link';
-  shareBtn.textContent = '🔗';
+  shareBtn.textContent = 'Share';
   shareBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     handleShareEntry(entry);
@@ -320,7 +323,8 @@ function createQuizStackEntry(questions, topic, difficulty, timerSeconds, format
 
   quizStack.push(entry);
 
-  // Show the stack section and scroll to new entry
+  // Hide empty state, show stack section, scroll to new entry
+  document.getElementById('quizStackEmpty').classList.add('hidden');
   document.getElementById('quizArea').classList.add('active');
   setTimeout(() => {
     card.scrollIntoView({ behavior: 'smooth', block: 'start' });
