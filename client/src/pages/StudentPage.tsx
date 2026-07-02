@@ -110,76 +110,71 @@ export default function StudentPage() {
     doSubmit(false, answersRef.current)
   }
 
-  if (loading) return <div className="min-h-screen bg-[#f4f1ea] font-mono flex items-center justify-center text-sm text-[#6b6b60]"><div className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-[#5b8c5a] border-t-transparent rounded-full animate-spin" /> Loading quiz questions...</div></div>
+  if (loading) return <div className="flex-center" style={{ minHeight: '100vh' }}>Loading quiz questions...</div>
   if (error || !quiz) return (
-    <div className="min-h-screen bg-[#f4f1ea] font-mono flex items-center justify-center">
-      <div className="text-center">
-        <h2 className="text-xl font-bold text-[#c62828] mb-2">Quiz not found</h2>
-        <p className="text-sm text-[#6b6b60]">This link may have expired or is invalid.</p>
-        <a href="/" className="mt-4 inline-block text-sm text-[#5b8c5a] hover:underline">Go home</a>
-      </div>
+    <div className="flex-center" style={{ minHeight: '100vh', flexDirection: 'column' }}>
+      <h2 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--error)', marginBottom: '8px' }}>Quiz not found</h2>
+      <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>This link may have expired or is invalid.</p>
+      <a href="/" className="btn btn-sm" style={{ marginTop: '16px', color: 'var(--accent)' }}>Go home</a>
     </div>
   )
 
   const timerTotal = quiz.timerSeconds || 1
   const timerPct = Math.max(0, (timerRemaining / timerTotal) * 100)
   const timerDisplay = `${String(Math.floor(timerRemaining / 60)).padStart(2, '0')}:${String(timerRemaining % 60).padStart(2, '0')}`
+  const timerClass = timerRemaining <= 30 ? 'danger' : timerRemaining <= 60 ? 'warning' : ''
+
+  const scoreCircleClass = score
+    ? score.pct === 100 ? 'perfect'
+      : score.pct >= 80 ? 'good'
+        : score.pct >= 60 ? 'fair' : 'poor'
+    : ''
 
   return (
-    <div className="min-h-screen bg-[#f4f1ea] font-mono text-[#2c2e26]">
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-[rgba(218,213,200,0.85)] px-4 py-3">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <a href="/" className="text-2xl font-extrabold tracking-tight">
-            <span className="text-[#5b8c5a]">Quik</span><span className="text-[#2c2e26]">Quiz</span>
+    <>
+      <header>
+        <div style={{ maxWidth: 'var(--max-content-width)', margin: '0 auto', padding: '0 var(--spacing-base)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '56px' }}>
+          <a href="/" style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.01em', textDecoration: 'none' }}>
+            <span className="gradient-text">QuikQuiz</span>
           </a>
-          <div className="flex items-center gap-3">
+          <div className="flex-center" style={{ gap: '12px' }}>
             {started && timerActive && (
-              <span className={`text-sm font-bold tabular-nums ${timerRemaining <= 30 ? 'text-[#c62828]' : timerRemaining <= 60 ? 'text-[#e65100]' : 'text-[#5b8c5a]'}`}>
-                {timerDisplay}
-              </span>
+              <span className={`timer-display ${timerClass}`}>{timerDisplay}</span>
             )}
-            <button onClick={() => setDark(!dark)} className="text-sm px-2.5 py-1.5 rounded-full border border-[rgba(218,213,200,0.85)] bg-white/80 text-[#6b6b60] hover:border-[#5b8c5a]">
+            <button onClick={() => setDark(!dark)} className="dark-toggle">
               {dark ? '☀️' : '🌙'}
             </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-[640px] mx-auto px-4 py-6">
-        <div className="text-center mb-4">
-          {quiz.subject && <div className="text-xs text-[#6b6b60] uppercase tracking-wider mb-1">{quiz.subject}</div>}
-          <h1 className="text-xl font-bold text-[#2c2e26]">{quiz.title || quiz.topic || 'Untitled Quiz'}</h1>
-          {quiz.topic && <p className="text-xs text-[#6b6b60] mt-1">{quiz.topic}</p>}
+      <main style={{ maxWidth: '640px', margin: '0 auto', padding: '24px 16px' }}>
+        <div className="text-center" style={{ marginBottom: '16px' }}>
+          {quiz.subject && <div style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>{quiz.subject}</div>}
+          <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)' }}>{quiz.title || quiz.topic || 'Untitled Quiz'}</h1>
+          {quiz.topic && <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>{quiz.topic}</p>}
         </div>
 
         {!started && !submitted && (
-          <div className="bg-white/85 backdrop-blur-md rounded-2xl border border-[rgba(218,213,200,0.85)] p-8 text-center">
-            <div className="flex justify-center gap-6 mb-6">
-              <span className="text-sm text-[#6b6b60]">Questions: <strong className="text-[#2c2e26]">{quiz.questions.length}</strong></span>
+          <div className="card" style={{ textAlign: 'center', padding: '32px' }}>
+            <div className="flex-center" style={{ gap: '24px', marginBottom: '24px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Questions: <strong style={{ color: 'var(--text-primary)' }}>{quiz.questions.length}</strong></span>
               {quiz.timerSeconds > 0 && (
-                <span className="text-sm text-[#6b6b60]">Time limit: <strong className="text-[#2c2e26]">{String(Math.floor(quiz.timerSeconds / 60)).padStart(2, '0')}:{String(quiz.timerSeconds % 60).padStart(2, '0')}</strong></span>
+                <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Time limit: <strong style={{ color: 'var(--text-primary)' }}>{String(Math.floor(quiz.timerSeconds / 60)).padStart(2, '0')}:{String(quiz.timerSeconds % 60).padStart(2, '0')}</strong></span>
               )}
-              {quiz.subject && <span className="text-sm text-[#6b6b60]">Subject: <strong className="text-[#2c2e26]">{quiz.subject}</strong></span>}
+              {quiz.subject && <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Subject: <strong style={{ color: 'var(--text-primary)' }}>{quiz.subject}</strong></span>}
             </div>
-            <button onClick={handleStart} className="px-8 py-3 rounded-full bg-[#5b8c5a] text-white font-semibold hover:bg-[#4a7a49]">
-              Start Quiz
-            </button>
+            <button onClick={handleStart} className="btn btn-primary btn-lg">Start Quiz</button>
           </div>
         )}
 
         {started && timerActive && (
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-1">
-              <span className={`text-sm font-bold tabular-nums ${timerRemaining <= 30 ? 'text-[#c62828]' : timerRemaining <= 60 ? 'text-[#e65100]' : 'text-[#5b8c5a]'}`}>
-                {timerDisplay}
-              </span>
-              <span className="text-xs text-[#6b6b60]">{Math.round(timerPct)}% remaining</span>
+          <div className="timer-bar active">
+            <span className={`timer-display ${timerClass}`}>{timerDisplay}</span>
+            <div className="timer-track">
+              <div className={`timer-fill ${timerClass}`} style={{ width: `${timerPct}%` }} />
             </div>
-            <div className="h-2 bg-[rgba(218,213,200,0.5)] rounded-full overflow-hidden">
-              <div className={`h-full rounded-full transition-all duration-1000 ${
-                timerRemaining <= 30 ? 'bg-[#c62828]' : timerRemaining <= 60 ? 'bg-[#e65100]' : 'bg-[#5b8c5a]'
-              }`} style={{ width: `${timerPct}%` }} />
-            </div>
+            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', minWidth: '90px', textAlign: 'right' }}>{Math.round(timerPct)}% remaining</span>
           </div>
         )}
 
@@ -197,7 +192,7 @@ export default function StudentPage() {
                 onNext={() => setSlideIdx(s => Math.min(quiz.questions.length - 1, s + 1))}
               />
             ) : (
-              <div className="space-y-4 mb-4">
+              <div style={{ marginBottom: '16px' }}>
                 {quiz.questions.map((q, i) => (
                   <StudentQuestionCard key={i} question={q} index={i} selected={answers[i]} onSelect={(v) => handleAnswer(i, v)} />
                 ))}
@@ -205,60 +200,61 @@ export default function StudentPage() {
             )}
 
             {unanswered && unanswered.length > 0 && (
-              <div className="bg-[#ffebee] border-2 border-[#c62828] rounded-xl p-4 mb-4 text-center">
-                <p className="font-bold text-sm text-[#c62828] mb-2">Unanswered Questions</p>
-                <div className="flex flex-wrap gap-2 justify-center mb-2">
+              <div style={{ background: 'var(--bg-error)', border: '2px solid var(--error)', borderRadius: 'var(--radius-md)', padding: '16px', marginBottom: '16px', textAlign: 'center' }}>
+                <p style={{ fontWeight: 700, fontSize: '14px', color: 'var(--error)', marginBottom: '8px' }}>Unanswered Questions</p>
+                <div className="flex-center" style={{ gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
                   {unanswered.map(qi => (
                     <button key={qi} onClick={() => {
                       if (quiz.format === 'slide') setSlideIdx(qi)
                       else document.querySelector(`[data-qi="${qi}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
                       setUnanswered(null)
                     }}
-                      className="w-8 h-8 rounded-full bg-[#c62828] text-white text-xs font-bold hover:bg-[#b71c1c]"
-                    >{qi + 1}</button>
+                      className="unanswered-badge">{qi + 1}</button>
                   ))}
                 </div>
               </div>
             )}
 
             <button onClick={handleSubmitClick} disabled={submitted}
-              className="w-full py-3 rounded-full bg-[#e65100] text-white font-semibold hover:bg-[#c62828] disabled:opacity-50"
-            >Submit Answers</button>
+              className="btn btn-warning btn-block">Submit Answers</button>
           </>
         )}
 
         {submitted && score && (
-          <div className="text-center py-6">
+          <div className="text-center" style={{ padding: '24px 0' }}>
             {quiz.showScore !== false ? (
               <>
-                <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 ${
-                  score.pct >= 60 ? 'bg-[#e8f5e9] text-[#2e7d32]' : 'bg-[#ffebee] text-[#c62828]'
-                }`}>{score.pct >= 60 ? 'Passed' : 'Needs Improvement'}</div>
-                <div className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl font-bold border-4 ${
-                  score.pct === 100 ? 'border-[#5b8c5a] text-[#5b8c5a]' :
-                  score.pct >= 80 ? 'border-[#5b8c5a] text-[#5b8c5a]' :
-                  score.pct >= 60 ? 'border-[#e65100] text-[#e65100]' :
-                  'border-[#c62828] text-[#c62828]'
-                }`}>{score.pct}%</div>
-                <div className="flex justify-center gap-6 mb-4">
-                  <div className="text-center"><div className="text-xl font-bold text-[#5b8c5a]">{score.correct}</div><div className="text-xs text-[#6b6b60]">Correct</div></div>
-                  <div className="text-center"><div className="text-xl font-bold text-[#c62828]">{score.total - score.correct}</div><div className="text-xs text-[#6b6b60]">Incorrect</div></div>
+                <div className={`score-message tier-${score.pct >= 90 ? 'perfect' : score.pct >= 80 ? 'great' : score.pct >= 60 ? 'good' : 'keep'}`}>
+                  {score.pct >= 90 ? 'Excellent!' : score.pct >= 80 ? 'Great work!' : score.pct >= 60 ? 'Good effort!' : 'Keep practicing!'}
+                </div>
+                <div className={`score-circle ${scoreCircleClass}`}>{score.pct}%</div>
+                <div className="score-stats">
+                  <div className="score-stat correct">
+                    <div className="score-stat-value">{score.correct}</div>
+                    <div className="score-stat-label">Correct</div>
+                  </div>
+                  <div className="score-stat incorrect">
+                    <div className="score-stat-value">{score.total - score.correct}</div>
+                    <div className="score-stat-label">Incorrect</div>
+                  </div>
                 </div>
               </>
             ) : (
               <div className="text-center">
-                <div className="text-xl font-bold text-[#5b8c5a] mb-1">Successfully submitted!</div>
-                <p className="text-sm text-[#6b6b60]">Your answers have been recorded.</p>
+                <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--success)', marginBottom: '4px' }}>Successfully submitted!</div>
+                <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Your answers have been recorded.</p>
               </div>
             )}
           </div>
         )}
       </main>
 
-      <footer className="text-center py-8 text-xs text-[#6b6b60] border-t border-[rgba(218,213,200,0.85)]">
-        <div className="max-w-4xl mx-auto px-4">QuikQuiz — AI-powered quiz generation for teachers and tutors.</div>
+      <footer style={{ textAlign: 'center', padding: '24px 16px', fontSize: '13px', color: 'var(--text-muted)', borderTop: 'var(--border-width, 0.63px) solid var(--border)' }}>
+        <div className="main-container" style={{ padding: '0' }}>
+          QuikQuiz — AI-powered quiz generation for teachers and tutors.
+        </div>
       </footer>
-    </div>
+    </>
   )
 }
 
@@ -272,34 +268,29 @@ function StudentQuestionCard({ question, index, selected, onSelect }: {
 }) {
   const [shuffled] = useState(() => [...question.options].sort(() => Math.random() - 0.5))
 
+  const tagClass = question.type === 'truefalse' ? 'tag-truefalse' : question.type === 'dropdown' ? 'tag-dropdown' : 'tag-multiple'
+  const typeLabel = question.type === 'truefalse' ? 'True / False' : question.type === 'dropdown' ? 'Dropdown' : 'Multiple Choice'
+
   return (
-    <div className="bg-white rounded-xl border border-[rgba(218,213,200,0.85)] p-4" data-qi={index}>
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-xs font-semibold text-[#5b8c5a]">Question {index + 1}</span>
-        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-          question.type === 'truefalse' ? 'bg-[#e8f5e9] text-[#2e7d32]' :
-          question.type === 'dropdown' ? 'bg-[#e3f2fd] text-[#1565c0]' :
-          'bg-[#fff3e0] text-[#e65100]'
-        }`}>{question.type === 'truefalse' ? 'True / False' : question.type === 'dropdown' ? 'Dropdown' : 'Multiple Choice'}</span>
+    <div className="question-card" data-qi={index}>
+      <div className="question-card-header">
+        <span className="question-number">Question {index + 1}</span>
+        <span className={`question-tag ${tagClass}`}>{typeLabel}</span>
       </div>
-      <p className="text-sm font-medium text-[#2c2e26] mb-3">{question.emoji} {question.question}</p>
+      <p className="question-text">{question.emoji} {question.question}</p>
 
       {question.type === 'dropdown' ? (
-        <select value={selected || ''} onChange={e => onSelect(e.target.value)}
-          className="w-full px-3 py-2 text-sm border border-[rgba(218,213,200,0.85)] rounded-lg bg-white text-[#2c2e26]">
-          <option value="" disabled>— Select an answer —</option>
-          {shuffled.map((opt, oi) => <option key={oi} value={opt}>{opt}</option>)}
-        </select>
+        <div className="dropdown-wrapper">
+          <select value={selected || ''} onChange={e => onSelect(e.target.value)} className="dropdown-select">
+            <option value="" disabled>— Select an answer —</option>
+            {shuffled.map((opt, oi) => <option key={oi} value={opt}>{opt}</option>)}
+          </select>
+        </div>
       ) : (
-        <div className="space-y-1.5">
+        <div className="options-list">
           {shuffled.map((opt, oi) => (
             <div key={oi} onClick={() => onSelect(opt)}
-              className={`px-3 py-2.5 text-sm rounded-lg border cursor-pointer transition-colors ${
-                selected === opt
-                  ? 'border-[#5b8c5a] bg-[rgba(91,140,90,0.08)] text-[#5b8c5a] font-medium'
-                  : 'border-[rgba(218,213,200,0.85)] text-[#2c2e26] hover:border-[#5b8c5a]'
-              }`}
-            >{opt}</div>
+              className={`option-item ${selected === opt ? 'selected' : ''}`}>{opt}</div>
           ))}
         </div>
       )}
@@ -321,56 +312,46 @@ function StudentSlideView({ question, index, total, selected, onSelect, goTo, on
 }) {
   const [shuffled] = useState(() => [...question.options].sort(() => Math.random() - 0.5))
 
+  const tagClass = question.type === 'truefalse' ? 'tag-truefalse' : question.type === 'dropdown' ? 'tag-dropdown' : 'tag-multiple'
+  const typeLabel = question.type === 'truefalse' ? 'True / False' : question.type === 'dropdown' ? 'Dropdown' : 'Multiple Choice'
+
   return (
-    <div>
-      <div className="flex justify-center gap-1.5 mb-4">
+    <div className="slide-container">
+      <div className="slide-dots">
         {Array.from({ length: total }).map((_, di) => (
           <button key={di} onClick={() => goTo(di)}
-            className={`w-2.5 h-2.5 rounded-full transition-colors ${di === index ? 'bg-[#5b8c5a]' : 'bg-[rgba(218,213,200,0.85)] hover:bg-[#5b8c5a]'}`}
-          />
+            className={`slide-dot ${di === index ? 'active' : ''}`} />
         ))}
       </div>
 
-      <div className="bg-white rounded-xl border border-[rgba(218,213,200,0.85)] p-6">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-xs font-semibold text-[#5b8c5a]">Question {index + 1}</span>
-          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-            question.type === 'truefalse' ? 'bg-[#e8f5e9] text-[#2e7d32]' :
-            question.type === 'dropdown' ? 'bg-[#e3f2fd] text-[#1565c0]' :
-            'bg-[#fff3e0] text-[#e65100]'
-          }`}>{question.type === 'truefalse' ? 'True / False' : question.type === 'dropdown' ? 'Dropdown' : 'Multiple Choice'}</span>
+      <div className="slide-card question-card">
+        <div className="question-card-header">
+          <span className="question-number">Question {index + 1}</span>
+          <span className={`question-tag ${tagClass}`}>{typeLabel}</span>
         </div>
-        <p className="text-base font-medium text-[#2c2e26] mb-4">{question.emoji} {question.question}</p>
+        <p className="question-text">{question.emoji} {question.question}</p>
 
         {question.type === 'dropdown' ? (
-          <select value={selected || ''} onChange={e => onSelect(e.target.value)}
-            className="w-full px-3 py-2 text-sm border border-[rgba(218,213,200,0.85)] rounded-lg bg-white text-[#2c2e26]">
-            <option value="" disabled>— Select an answer —</option>
-            {shuffled.map((opt, oi) => <option key={oi} value={opt}>{opt}</option>)}
-          </select>
+          <div className="dropdown-wrapper">
+            <select value={selected || ''} onChange={e => onSelect(e.target.value)} className="dropdown-select">
+              <option value="" disabled>— Select an answer —</option>
+              {shuffled.map((opt, oi) => <option key={oi} value={opt}>{opt}</option>)}
+            </select>
+          </div>
         ) : (
-          <div className="space-y-2">
+          <div className="options-list">
             {shuffled.map((opt, oi) => (
               <div key={oi} onClick={() => onSelect(opt)}
-                className={`px-4 py-2.5 text-sm rounded-lg border cursor-pointer transition-colors ${
-                  selected === opt
-                    ? 'border-[#5b8c5a] bg-[rgba(91,140,90,0.08)] text-[#5b8c5a] font-medium'
-                    : 'border-[rgba(218,213,200,0.85)] text-[#2c2e26] hover:border-[#5b8c5a]'
-                }`}
-              >{opt}</div>
+                className={`option-item ${selected === opt ? 'selected' : ''}`}>{opt}</div>
             ))}
           </div>
         )}
       </div>
 
-      <div className="flex items-center justify-between mt-3">
-        <button onClick={onPrev} disabled={index === 0}
-          className="px-4 py-2 text-sm rounded-full border border-[rgba(218,213,200,0.85)] disabled:opacity-30 hover:border-[#5b8c5a]"
-        >◀</button>
-        <span className="text-xs text-[#6b6b60]">{index + 1} / {total}</span>
-        <button onClick={onNext} disabled={index === total - 1}
-          className="px-4 py-2 text-sm rounded-full border border-[rgba(218,213,200,0.85)] disabled:opacity-30 hover:border-[#5b8c5a]"
-        >▶</button>
+      <div className="slide-nav">
+        <button onClick={onPrev} disabled={index === 0} className="slide-nav-btn">◀</button>
+        <span className="slide-counter">{index + 1} / {total}</span>
+        <button onClick={onNext} disabled={index === total - 1} className="slide-nav-btn">▶</button>
       </div>
     </div>
   )

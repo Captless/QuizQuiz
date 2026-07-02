@@ -17,10 +17,10 @@ export default function QuizStack({ entries, onDelete, onUpdate, onShare, onResu
 
   if (entries.length === 0) {
     return (
-      <div className="text-center py-12">
-        <div className="text-4xl mb-2">📋</div>
-        <p className="font-semibold text-[#2c2e26]">No quizzes yet</p>
-        <p className="text-sm text-[#6b6b60] mt-1">Generate your first quiz above and it will appear here.</p>
+      <div className="quiz-stack-empty">
+        <div className="quiz-stack-empty-icon">📋</div>
+        <p className="quiz-stack-empty-title">No quizzes yet</p>
+        <p className="quiz-stack-empty-text">Generate your first quiz above and it will appear here.</p>
       </div>
     )
   }
@@ -28,7 +28,7 @@ export default function QuizStack({ entries, onDelete, onUpdate, onShare, onResu
   const toggle = (id: string) => setExpanded(prev => prev === id ? null : id)
 
   return (
-    <div className="space-y-4">
+    <div>
       {entries.map(entry => (
         <QuizEntryCard
           key={entry.id}
@@ -67,56 +67,50 @@ function QuizEntryCard({ entry, expanded, onToggle, onDelete, onUpdate, onShare,
     if (title.trim() && title !== entry.title) onUpdate({ title: title.trim() })
   }
 
+  const diffClass = entry.difficulty === 'Easy' ? 'tag-multiple' : entry.difficulty === 'Medium' ? 'tag-truefalse' : ''
+
   return (
-    <div className="bg-white rounded-xl border border-[rgba(218,213,200,0.85)] shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 cursor-pointer" onClick={onToggle}>
-        <div className="flex items-center gap-2 min-w-0">
-          {editing ? (
-            <input ref={inputRef} value={title} onChange={e => setTitle(e.target.value)}
-              onBlur={finishTitle} onKeyDown={e => { if (e.key === 'Enter') finishTitle() }}
-              className="text-sm font-semibold border border-[rgba(218,213,200,0.85)] rounded px-1.5 py-0.5 w-40 bg-white text-[#2c2e26]" autoFocus
-            />
-          ) : (
-            <span className="text-sm font-semibold text-[#2c2e26] truncate max-w-[200px]" onClick={e => { e.stopPropagation(); setEditing(true); }}>{entry.title}</span>
-          )}
-          {entry.subject && <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#fff3e0] text-[#e65100] uppercase">{entry.subject}</span>}
-          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
-            entry.difficulty === 'Easy' ? 'bg-[#e8f5e9] text-[#2e7d32]' :
-            entry.difficulty === 'Medium' ? 'bg-[#fff3e0] text-[#e65100]' :
-            'bg-[#ffebee] text-[#c62828]'
-          }`}>{entry.difficulty}</span>
-          <span className="text-xs text-[#6b6b60]">{entry.questions.length} question{entry.questions.length !== 1 ? 's' : ''}</span>
+    <div className="quiz-entry card">
+      <div className="quiz-entry-header" onClick={onToggle}>
+        <div className="quiz-entry-info">
+          <div className="quiz-entry-title-row">
+            {editing ? (
+              <input ref={inputRef} value={title} onChange={e => setTitle(e.target.value)}
+                onBlur={finishTitle} onKeyDown={e => { if (e.key === 'Enter') finishTitle() }}
+                className="quiz-entry-title-input" autoFocus
+              />
+            ) : (
+              <span className="quiz-entry-title" onClick={e => { e.stopPropagation(); setEditing(true); }}>{entry.title}</span>
+            )}
+            {entry.subject && <span className="quiz-entry-subject">{entry.subject}</span>}
+            <span className={`quiz-entry-badge ${diffClass}`}>{entry.difficulty}</span>
+            <span className="quiz-entry-meta">{entry.questions.length} question{entry.questions.length !== 1 ? 's' : ''}</span>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5">
-          <ActionBtn label="Delete" onClick={e => { e.stopPropagation(); if (confirm('Delete this quiz?')) onDelete() }} />
-          <ActionBtn label="PDF" onClick={e => { e.stopPropagation(); onExportPDF() }} />
-          <ActionBtn label={entry.showScore ? '✓ Score' : '✗ Score'} onClick={e => { e.stopPropagation(); onUpdate({ showScore: !entry.showScore }) }} />
-          <ActionBtn label="Results" onClick={async e => { e.stopPropagation(); const r = await onResults(); if (r.length === 0) alert('No submissions yet. Share the link with students.'); else showResultsModal(entry, r) }} />
-          <ActionBtn label="Share" onClick={e => { e.stopPropagation(); onShare() }} />
-          <span className="text-xs text-[#6b6b60] ml-1">{expanded ? '▼' : '▶'}</span>
+        <div className="quiz-entry-actions">
+          <button className="btn btn-sm btn-outline entry-delete-btn" onClick={e => { e.stopPropagation(); if (confirm('Delete this quiz?')) onDelete() }}>Delete</button>
+          <button className="btn btn-sm btn-outline" onClick={e => { e.stopPropagation(); onExportPDF() }}>PDF</button>
+          <button className={`btn btn-sm entry-score-toggle`} data-on={entry.showScore ? 'true' : 'false'} onClick={e => { e.stopPropagation(); onUpdate({ showScore: !entry.showScore }) }}>
+            {entry.showScore ? '✓ Score' : '✗ Score'}
+          </button>
+          <button className="btn btn-sm btn-outline" onClick={async e => { e.stopPropagation(); const r = await onResults(); if (r.length === 0) alert('No submissions yet. Share the link with students.'); else showResultsModal(entry, r) }}>Results</button>
+          <button className="btn btn-sm btn-outline" onClick={e => { e.stopPropagation(); onShare() }}>Share</button>
+          <span className="entry-toggle" onClick={onToggle}>{expanded ? '▼' : '▶'}</span>
         </div>
       </div>
 
-      {expanded && (
-        <div className="border-t border-[rgba(218,213,200,0.85)] p-4 space-y-3">
+      <div className={`quiz-entry-body ${expanded ? '' : 'hidden'}`}>
+        <div className="quiz-entry-content">
           {entry.studentFormat === 'slide' ? (
             <SlideView questions={entry.questions} />
           ) : (
             entry.questions.map((q, i) => (
-              <QuestionCard key={i} question={q} index={i} />
+              <QuestionCard key={i} question={q} index={i} showAnswer />
             ))
           )}
         </div>
-      )}
+      </div>
     </div>
-  )
-}
-
-function ActionBtn({ label, onClick }: { label: string; onClick: (e: React.MouseEvent) => void }) {
-  return (
-    <button onClick={onClick}
-      className="text-xs px-2.5 py-1 rounded-full border border-[rgba(218,213,200,0.85)] text-[#6b6b60] hover:border-[#5b8c5a] hover:text-[#2c2e26] transition-colors"
-    >{label}</button>
   )
 }
 
@@ -124,50 +118,55 @@ function ActionBtn({ label, onClick }: { label: string; onClick: (e: React.Mouse
 
 function showResultsModal(entry: QuizEntry, results: QuizResult[]) {
   const overlay = document.createElement('div')
-  overlay.className = 'fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm'
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px)'
   const total = entry.questions.length
   const count = results.length
   const avg = Math.round(results.reduce((s, r) => s + (r.percentage || Math.round((r.correct / r.total) * 100)), 0) / count)
 
   let html = `
-    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 p-6 max-h-[80vh] overflow-y-auto">
-      <h2 class="text-lg font-semibold text-center mb-1 text-[#2c2e26]">Results</h2>
-      <p class="text-sm text-center text-[#6b6b60] mb-4">${entry.topic}</p>
-      <div class="flex justify-center gap-6 mb-4">
-        <div class="text-center"><div class="text-2xl font-bold text-[#5b8c5a]">${count}</div><div class="text-xs text-[#6b6b60]">Submissions</div></div>
-        <div class="text-center"><div class="text-2xl font-bold text-[#5b8c5a]">${avg}%</div><div class="text-xs text-[#6b6b60]">Average</div></div>
-      </div>
-      <div class="space-y-2 mb-4">`
+    <div class="results-modal" style="padding:24px">
+      <h2 class="card-title text-center">Results</h2>
+      <p class="text-center" style="font-size:14px;color:var(--text-secondary);margin-bottom:16px">${entry.topic}</p>
+      <div class="score-stats">
+        <div class="score-stat correct">
+          <div class="score-stat-value">${count}</div>
+          <div class="score-stat-label">Submissions</div>
+        </div>
+        <div class="score-stat correct">
+          <div class="score-stat-value">${avg}%</div>
+          <div class="score-stat-label">Average</div>
+        </div>
+      </div>`
 
   results.forEach((r, idx) => {
     const pct = r.percentage || Math.round((r.correct / r.total) * 100)
     const time = new Date(r.submittedAt).toLocaleString()
-    const color = pct >= 70 ? '#5b8c5a' : pct >= 40 ? '#e65100' : '#c62828'
+    const color = pct >= 70 ? 'var(--success)' : pct >= 40 ? 'var(--warning)' : 'var(--error)'
     html += `
-      <div class="results-entry border border-[rgba(218,213,200,0.85)] rounded-lg overflow-hidden">
-        <div class="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-[rgba(239,235,227,0.3)]" onclick="this.nextElementSibling.classList.toggle('hidden');this.querySelector('.results-toggle').textContent=this.nextElementSibling.classList.contains('hidden')?'▼':'▲'">
-          <div><strong class="text-sm text-[#2c2e26]">Submission #${idx + 1}</strong> <span class="text-[10px] text-[#6b6b60]">${time}</span></div>
-          <div class="flex items-center gap-2">
-            <div class="w-16 h-2 bg-[rgba(218,213,200,0.5)] rounded-full overflow-hidden"><div class="h-full rounded-full" style="width:${pct}%;background:${color}"></div></div>
-            <span class="text-xs font-bold text-[#2c2e26]">${r.correct}/${total}</span>
-            <span class="results-toggle text-[10px] text-[#5b8c5a]">▼</span>
+      <div class="results-entry">
+        <div class="results-entry-header" onclick="this.nextElementSibling.classList.toggle('hidden');this.querySelector('.results-toggle').textContent=this.nextElementSibling.classList.contains('hidden')?'▶':'▼'">
+          <div><strong style="font-size:14px">Submission #${idx + 1}</strong> <span style="font-size:12px;color:var(--text-muted)">${time}</span></div>
+          <div class="flex-center">
+            <div class="timer-track" style="width:80px"><div class="timer-fill" style="width:${pct}%;background:${color}"></div></div>
+            <span style="font-size:13px;font-weight:700">${r.correct}/${total}</span>
+            <span class="results-toggle" style="font-size:11px;color:var(--accent);margin-left:4px">▶</span>
           </div>
         </div>
-        <div class="hidden px-3 py-2 border-t border-[rgba(218,213,200,0.85)] space-y-2 bg-[rgba(239,235,227,0.15)]">`
+        <div class="results-detail hidden">`
 
     if (r.answers && entry.questions) {
       entry.questions.forEach((q, qi) => {
         const selected = r.answers[qi]
         const isCorrect = selected === q.answer
-        html += `<div class="text-xs"><span class="font-medium">Q${qi + 1}:</span> ${q.question}<br>
-          <span>Answered: <span class="font-semibold" style="color:${isCorrect ? '#5b8c5a' : '#c62828'}">${selected || '—'}</span>${!isCorrect ? ` &nbsp;· Correct: <span class="font-semibold text-[#5b8c5a]">${q.answer}</span>` : ''}</span></div>`
+        html += `<div class="results-q"><strong>Q${qi + 1}:</strong> ${q.question}<br>
+          <span>Answered: <span style="font-weight:600;color:${isCorrect ? 'var(--success)' : 'var(--error)'}">${selected || '—'}</span>${!isCorrect ? ` &nbsp;· Correct: <span style="font-weight:600;color:var(--success)">${q.answer}</span>` : ''}</span></div>`
       })
     }
 
     html += `</div></div>`
   })
 
-  html += `</div><button class="w-full py-2 rounded-full border border-[rgba(218,213,200,0.85)] text-sm text-[#6b6b60] hover:bg-[rgba(239,235,227,0.5)]" onclick="this.closest('.fixed').remove()">Close</button></div>`
+  html += `</div><button class="btn btn-block btn-secondary" style="margin-top:16px" onclick="this.closest('.fixed')?.remove()">Close</button></div>`
 
   overlay.innerHTML = html
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove() })

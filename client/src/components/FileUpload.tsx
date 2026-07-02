@@ -25,24 +25,25 @@ export default function FileUpload({ file, onChange, disabled }: Props) {
 
   return (
     <div className="upload-section">
-      <div className="border-t border-[rgba(218,213,200,0.85)] my-4" />
-      <label className="block text-sm font-medium mb-1.5 text-[#2c2e26]">Or upload a file (PDF/PPTX)</label>
+      <div className="section-divider"><span className="section-divider-text">Or upload a file</span></div>
       {file ? (
-        <div className="flex items-center gap-2 px-4 py-2 bg-[rgba(239,235,227,0.5)] rounded-lg text-sm">
-          <span className="flex-1 truncate">{file.name}</span>
-          <button onClick={() => onChange(null)} className="text-[#6b6b60] hover:text-[#2c2e26]" disabled={disabled}>✕</button>
+        <div className="file-info">
+          <span className="file-info-name">{file.name}</span>
+          <button onClick={() => onChange(null)} className="btn-icon" disabled={disabled}>✕</button>
         </div>
       ) : (
         <div
-          className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${dragOver ? 'border-[#5b8c5a] bg-[rgba(91,140,90,0.05)]' : 'border-[rgba(218,213,200,0.85)] hover:border-[#5b8c5a]'} ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
+          className={`file-drop-zone ${dragOver ? 'drag-over' : ''} ${disabled ? 'hidden' : ''}`}
           onClick={() => inputRef.current?.click()}
           onDragOver={e => { e.preventDefault(); setDragOver(true) }}
           onDragLeave={() => setDragOver(false)}
           onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }}
         >
-          <div className="text-3xl mb-1">📄</div>
-          <p className="text-sm text-[#6b6b60]">Drop a file here, or click to browse</p>
-          <p className="text-xs text-[#6b6b60] mt-1">Supports PDF and PPTX (max 2MB)</p>
+          <div className="file-drop-content">
+            <div className="file-drop-icon">📄</div>
+            <p className="file-drop-text">Drop a file here, or click to browse</p>
+            <p className="file-drop-hint">Supports PDF and PPTX (max 2MB)</p>
+          </div>
           <input ref={inputRef} type="file" accept=".pdf,.pptx" hidden onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
         </div>
       )}

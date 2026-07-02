@@ -48,7 +48,7 @@ export default function TopicChips({ subject, grade, onSelect }: Props) {
     setLoading(true)
     try {
       const ai = await suggestTopics(subject, grade)
-      if (ai.length > 0) { setChips(ai.slice(0, 5)); return }
+      if (ai.length > 0) { setChips(ai.slice(0, 5)); setLoading(false); return }
     } catch {}
     const pool = TOPICS[subject]?.[grade]
     if (pool) {
@@ -69,14 +69,12 @@ export default function TopicChips({ subject, grade, onSelect }: Props) {
   if (!subject || !grade || chips.length === 0) return null
 
   return (
-    <div className="flex flex-wrap gap-1.5 mb-3">
+    <div className="topic-chips">
       <button type="button" onClick={refresh} disabled={loading}
-        className="px-2 py-1 text-xs rounded-full border border-[rgba(218,213,200,0.85)] text-[#6b6b60] hover:border-[#5b8c5a] disabled:opacity-50"
-      >{loading ? '...' : 'Refresh'}</button>
+        className={`topic-chip-randomize ${loading ? 'loading' : ''}`}>{loading ? '' : 'Refresh'}</button>
       {chips.map(t => (
         <button key={t} type="button" onClick={() => onSelect(t)}
-          className="px-2.5 py-1 text-xs rounded-full border border-[rgba(218,213,200,0.85)] text-[#2c2e26] hover:bg-[#5b8c5a] hover:text-white hover:border-[#5b8c5a] transition-colors"
-        >{t}</button>
+          className="topic-chip">{t}</button>
       ))}
     </div>
   )

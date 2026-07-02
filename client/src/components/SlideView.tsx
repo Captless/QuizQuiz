@@ -10,43 +10,35 @@ export default function SlideView({ questions }: Props) {
   const q = questions[idx]
   if (!q) return null
 
+  const tagClass = q.type === 'truefalse' ? 'tag-truefalse' : q.type === 'dropdown' ? 'tag-dropdown' : 'tag-multiple'
+  const typeLabel = q.type === 'truefalse' ? 'True / False' : q.type === 'dropdown' ? 'Dropdown' : 'Multiple Choice'
+
   return (
-    <div>
-      <div className="flex justify-center gap-1.5 mb-4">
+    <div className="slide-container">
+      <div className="slide-dots">
         {questions.map((_, di) => (
           <button key={di} onClick={() => setIdx(di)}
-            className={`w-2.5 h-2.5 rounded-full transition-colors ${di === idx ? 'bg-[#5b8c5a]' : 'bg-[rgba(218,213,200,0.85)]'}`}
-          />
+            className={`slide-dot ${di === idx ? 'active' : ''}`} />
         ))}
       </div>
 
-      <div className="bg-white rounded-xl border border-[rgba(218,213,200,0.85)] p-6">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-xs font-semibold text-[#5b8c5a]">Question {idx + 1}</span>
-          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-            q.type === 'truefalse' ? 'bg-[#e8f5e9] text-[#2e7d32]' :
-            q.type === 'dropdown' ? 'bg-[#e3f2fd] text-[#1565c0]' :
-            'bg-[#fff3e0] text-[#e65100]'
-          }`}>{q.type === 'truefalse' ? 'True / False' : q.type === 'dropdown' ? 'Dropdown' : 'Multiple Choice'}</span>
+      <div className="slide-card question-card">
+        <div className="question-card-header">
+          <span className="question-number">Question {idx + 1}</span>
+          <span className={`question-tag ${tagClass}`}>{typeLabel}</span>
         </div>
-        <p className="text-base font-medium text-[#2c2e26] mb-4">{q.emoji} {q.question}</p>
-        <div className="space-y-2">
+        <p className="question-text">{q.emoji} {q.question}</p>
+        <div className="options-list">
           {[...q.options].sort(() => Math.random() - 0.5).map((opt, oi) => (
-            <div key={oi} className="px-4 py-2.5 text-sm rounded-lg border border-[rgba(218,213,200,0.85)] text-[#2c2e26]">
-              {opt}
-            </div>
+            <div key={oi} className="option-item option-item--readonly">{opt}</div>
           ))}
         </div>
       </div>
 
-      <div className="flex items-center justify-between mt-3">
-        <button onClick={() => setIdx(idx - 1)} disabled={idx === 0}
-          className="px-3 py-1.5 text-sm rounded-full border border-[rgba(218,213,200,0.85)] disabled:opacity-30 hover:border-[#5b8c5a]"
-        >◀</button>
-        <span className="text-xs text-[#6b6b60]">{idx + 1} / {questions.length}</span>
-        <button onClick={() => setIdx(idx + 1)} disabled={idx === questions.length - 1}
-          className="px-3 py-1.5 text-sm rounded-full border border-[rgba(218,213,200,0.85)] disabled:opacity-30 hover:border-[#5b8c5a]"
-        >▶</button>
+      <div className="slide-nav">
+        <button onClick={() => setIdx(idx - 1)} disabled={idx === 0} className="slide-nav-btn">◀</button>
+        <span className="slide-counter">{idx + 1} / {questions.length}</span>
+        <button onClick={() => setIdx(idx + 1)} disabled={idx === questions.length - 1} className="slide-nav-btn">▶</button>
       </div>
     </div>
   )
