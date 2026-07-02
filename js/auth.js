@@ -1,6 +1,9 @@
 /* ===== Google OAuth ===== */
 
+var _googleReady = false;
+
 function initGoogleSignIn() {
+  if (_googleReady) return;
   const clientId = window.QUIKQUIZ_CONFIG?.googleClientId;
   if (!clientId || typeof google === 'undefined') return;
   google.accounts.id.initialize({
@@ -8,20 +11,46 @@ function initGoogleSignIn() {
     callback: handleGoogleCredential,
     cancel_on_tap_outside: false
   });
-  const wrapper = document.getElementById('gSignInWrapper');
-  if (wrapper) {
-    google.accounts.id.renderButton(wrapper, {
+  var hidden = document.getElementById('hiddenGoogleBtn');
+  if (hidden) {
+    google.accounts.id.renderButton(hidden, {
       type: 'standard',
       shape: 'pill',
-      theme: 'outline',
+      theme: 'filled_blue',
       size: 'medium',
       text: 'signin_with'
     });
   }
+  _googleReady = true;
 }
+
+function triggerGoogleSignIn() {
+  if (!_googleReady) {
+    console.warn('Google sign-in not initialized – client ID missing?');
+    return;
+  }
+  var btn = document.querySelector('#hiddenGoogleBtn div[role="button"]');
+  if (btn) {
+    btn.click();
+  } else if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+    google.accounts.id.prompt();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  var customBtn = document.getElementById('customGoogleBtn');
+  if (customBtn) customBtn.addEventListener('click', triggerGoogleSignIn);
+  var demoBtn = document.getElementById('demoGoogleBtn');
+  if (demoBtn) demoBtn.addEventListener('click', triggerGoogleSignIn);
+});
 
 function handleGoogleCredential(response) {
   const data = parseJwt(response.credential);
+  var prev = getUser();
+  if (prev && prev.email && prev.email !== (data.email || '')) {
+    localStorage.removeItem('quikquiz_paid');
+    localStorage.removeItem('quikquiz_usage');
+  }
   localStorage.setItem('quikquiz_user', JSON.stringify({
     name: data.name || 'User',
     email: data.email || '',
@@ -40,6 +69,8 @@ function parseJwt(token) {
 
 function signOut() {
   localStorage.removeItem('quikquiz_user');
+  localStorage.removeItem('quikquiz_paid');
+  localStorage.removeItem('quikquiz_usage');
   if (typeof updateUI === 'function') updateUI();
 }
 

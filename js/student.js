@@ -330,7 +330,7 @@
     });
 
     var submitBtn = document.getElementById('studentSubmitBtn');
-    submitBtn.innerHTML = '<span class="spinner-bars"><span class="spinner-bar"></span><span class="spinner-bar"></span><span class="spinner-bar"></span><span class="spinner-bar"></span><span class="spinner-bar"></span></span>';
+    submitBtn.innerHTML = '<span class="circular-spinner"></span>';
     submitBtn.disabled = true;
 
     fetch('/api/quiz/' + quizId + '/submit', {

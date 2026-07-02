@@ -1,0 +1,283 @@
+/* ===== Homepage Redesign – Layout & Component Styles ===== */
+
+/* ---------- Main Container ---------- */
+.main-container {
+  max-width: var(--max-content-width, 1120px);
+  margin: 0 auto;
+  padding: var(--spacing-lg) var(--spacing-base);
+}
+
+/* ---------- Split Hero ---------- */
+.split-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-lg);
+}
+.hero-left {
+  flex: 1 1 300px;
+  text-align: center;
+}
+.hero-right {
+  flex: 1 1 300px;
+  display: flex;
+  justify-content: center;
+}
+
+.mock-quiz-card {
+  width: 360px;
+  max-width: 100%;
+  padding: var(--spacing-xl);
+  background: var(--bg-card);
+  backdrop-filter: blur(var(--surface-blur, 12px));
+  -webkit-backdrop-filter: blur(var(--surface-blur, 12px));
+  border: var(--border-width, 0.63px) solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition);
+}
+.mock-quiz-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent-light);
+}
+.mock-quiz-card .mock-question {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+}
+.mock-quiz-card .mock-options {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.mock-quiz-card .mock-options li {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  border-radius: var(--radius-sm);
+  border: var(--border-width, 0.63px) solid var(--border);
+  background: var(--bg-body);
+  color: var(--text-secondary);
+  transition: all var(--transition);
+}
+.mock-quiz-card .mock-options li.selected {
+  background: var(--accent-light);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+.mock-quiz-card .mock-options li:not(.selected):hover {
+  background: var(--bg-hover);
+}
+
+/* ---------- Value Prop Cards ---------- */
+.value-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-lg);
+}
+.value-card {
+  text-align: center;
+  background: var(--bg-card);
+  backdrop-filter: blur(var(--surface-blur, 12px));
+  -webkit-backdrop-filter: blur(var(--surface-blur, 12px));
+  border: var(--border-width, 0.63px) solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition);
+}
+.value-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent-light);
+  transform: translateY(-2px);
+}
+.value-card .icon {
+  width: 36px;
+  height: 36px;
+  margin-bottom: 12px;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  display: inline-block;
+}
+.value-card h3 {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.value-card p {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ---------- Stepper / How It Works ---------- */
+.stepper-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+  padding: var(--spacing-xl) 0;
+}
+.stepper::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: calc(var(--stepper-size) / 2);
+  right: calc(var(--stepper-size) / 2);
+  height: 2px;
+  background: var(--border);
+  z-index: 0;
+  transform: translateY(-50%);
+}
+.step {
+  position: relative;
+  width: var(--stepper-size);
+  height: var(--stepper-size);
+  background: var(--bg-card);
+  border: var(--border-width, 0.63px) solid var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  z-index: 1;
+  transition: all var(--transition);
+  user-select: none;
+  margin: 0 auto;
+}
+.step:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-light);
+}
+.step.active {
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-light);
+}
+
+/* Step overlay cards */
+.step-overlay {
+  display: none;
+  max-width: 480px;
+  width: 100%;
+  background: var(--bg-card);
+  backdrop-filter: blur(var(--surface-blur, 12px));
+  -webkit-backdrop-filter: blur(var(--surface-blur, 12px));
+  border: var(--border-width, 0.63px) solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-md);
+  margin-top: 12px;
+  transition: all var(--transition);
+}
+.step-overlay.show {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+.step-overlay h3 {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.step-overlay p {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* ---------- FAQ ---------- */
+.faq-section h2 {
+  margin-bottom: var(--spacing-xl);
+}
+
+/* ---------- Scroll Reveal ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+}
+.reveal.show {
+  animation: slideUpReveal 0.55s ease-out forwards;
+}
+@keyframes slideUpReveal {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+  .reveal.show {
+    animation: none;
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
+  .faq-section {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .split-hero {
+    flex-direction: column;
+    text-align: center;
+  }
+  .hero-right {
+    order: -1;
+  }
+  .mock-quiz-card {
+    width: 100%;
+  }
+  .value-cards {
+    grid-template-columns: 1fr;
+  }
+  .stepper::before {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-title {
+    font-size: 28px;
+  }
+  .hero-subtitle {
+    font-size: 14px;
+  }
+  .section-title {
+    font-size: 20px;
+  }
+}

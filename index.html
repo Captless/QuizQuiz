@@ -9,8 +9,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="/css/design-tokens.css">
+<link rel="stylesheet" href="/css/homepage.css">
 <link rel="stylesheet" href="/css/style.css">
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://accounts.google.com/gsi/client"></script>
 <script src="https://js.stripe.com/v3/"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <style>.hidden{display:none!important}</style>
@@ -30,311 +31,310 @@
       <span id="userName" class="text-sm font-medium hidden" style="color:var(--text-secondary);"></span>
       <img id="userAvatar" class="w-9 h-9 rounded-full border-2 object-cover hidden" style="border-color:var(--border);" alt="Avatar">
       <button id="darkToggle" class="dark-toggle" title="Toggle dark mode">🌙</button>
-      <button id="subscribeBtnHeader" class="btn btn-primary btn-sm hidden">Subscribe $9/mo</button>
-      <div id="gSignInWrapper"></div>
+      <button id="subscribeBtnHeader" class="btn btn-primary btn-sm hidden">Upgrade to Pro</button>
+      <div id="gSignInWrapper" class="hidden"></div>
+      <button id="customGoogleBtn" class="btn-custom-google hidden">Sign in with Google</button>
       <button id="signOutBtn" class="btn btn-secondary btn-sm hidden">Sign Out</button>
     </div>
   </div>
 </header>
 
+<!-- Main Content -->
 <main class="main-container">
 
-  <!-- Hero -->
-  <section class="hero" id="heroSection">
-    <div class="hero-bg">
-      <div class="blob blob-1"></div>
-      <div class="blob blob-2"></div>
-      <div class="blob blob-3"></div>
-    </div>
-    <div class="hero-stats">
-      <span class="hero-stat">10K+ Questions Generated</span>
-      <span class="hero-stat">4.9 ★ Teacher Rating</span>
-      <span class="hero-stat">500+ Classrooms</span>
-    </div>
-    <h1 class="hero-title">
-      Generate a <span class="gradient-text">Quiz</span> in Seconds
-    </h1>
-    <p class="hero-subtitle">
-      QuikQuiz lets teachers generate AI‑assisted multiple‑choice, true/false, and dropdown quizzes in seconds.
-      Pick a subject, set a difficulty level, and let the system create balanced questions for you.
-    </p>
-    <p class="hero-subdetail">
-      Import PDFs or PPTX files, enable a timer for each quiz, and export results as a PDF.
-    </p>
-    <button class="btn btn-primary btn-lg hero-cta" id="heroCtaBtn">Generate Your First Quiz</button>
-  </section>
-
-  <!-- Trusted Divider -->
-  <div class="trusted-divider">
-    <span class="trusted-line"></span>
-    <span class="trusted-icon">✦</span>
-    <span class="trusted-line"></span>
-  </div>
-
-  <!-- How It Works -->
-  <section class="section-how" id="howSection" role="region" aria-labelledby="howTitle">
-    <h2 class="section-title" id="howTitle">How QuikQuiz Works</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
-      <div class="how-step">
-        <h3 class="step-title">1️⃣ Choose a subject &amp; difficulty</h3>
-        <p>Select a topic (Math, History, Science, etc.) and the level of challenge you need.</p>
+    <!-- Split Hero -->
+    <section class="hero split-hero reveal" id="heroSection">
+      <div class="hero-bg">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
       </div>
-      <div class="how-step">
-        <h3 class="step-title">2️⃣ Generate the quiz</h3>
-        <p>Click "Generate". The AI composes a set of balanced questions instantly.</p>
-      </div>
-      <div class="how-step">
-        <h3 class="step-title">3️⃣ Share &amp; track results</h3>
-        <p>Students take the quiz, you view live scores, and you can download a PDF report.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Why QuikQuiz -->
-  <section class="section-why" id="whySection" role="region" aria-labelledby="whyTitle">
-    <h2 class="section-title" id="whyTitle">Why Choose QuikQuiz?</h2>
-    <ul class="list-disc pl-6 space-y-3">
-      <li>Instant AI‑generated quizzes, no manual authoring.</li>
-      <li>Secure login with Google OAuth; no answer data is stored.</li>
-      <li>Import existing PDFs or PowerPoint slides to reuse content.</li>
-      <li>Free tier includes one quiz; unlimited access for $9 / month.</li>
-      <li>Simple, responsive UI with dark‑mode support.</li>
-    </ul>
-  </section>
-
-  <!-- FAQ -->
-  <section class="section-faq" id="faqSection" role="region" aria-labelledby="faqTitle">
-    <h2 class="section-title" id="faqTitle">Frequently Asked Questions</h2>
-
-    <div class="faq-item">
-      <input type="checkbox" id="faq1" class="faq-input" />
-      <label class="faq-label" for="faq1">Do I need an OpenAI API key?</label>
-      <div class="faq-content">
-        <p>No. The service runs the model on the backend; you only need a Google sign‑in.</p>
-      </div>
-    </div>
-
-    <div class="faq-item">
-      <input type="checkbox" id="faq2" class="faq-input" />
-      <label class="faq-label" for="faq2">Can I use my own PDFs?</label>
-      <div class="faq-content">
-        <p>Yes. Upload a PDF or PPTX and the system will extract relevant text for the quiz.</p>
-      </div>
-    </div>
-
-    <div class="faq-item">
-      <input type="checkbox" id="faq3" class="faq-input" />
-      <label class="faq-label" for="faq3">Is student data stored?</label>
-      <div class="faq-content">
-        <p>No. Student answers are processed in‑memory only for scoring; nothing is saved.</p>
-      </div>
-    </div>
-
-    <div class="faq-item">
-      <input type="checkbox" id="faq4" class="faq-input" />
-      <label class="faq-label" for="faq4">What browsers are supported?</label>
-      <div class="faq-content">
-        <p>The app works on any modern desktop or mobile browser that supports ES6 and CSS blur.</p>
-      </div>
-    </div>
-
-    <div class="faq-item">
-      <input type="checkbox" id="faq5" class="faq-input" />
-      <label class="faq-label" for="faq5">How can I cancel my subscription?</label>
-      <div class="faq-content">
-        <p>Cancel anytime via the Stripe portal linked in your account settings.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Demo Showcase -->
-  <section class="demo-showcase" id="demoQuizSection">
-    <h2 class="section-title">See It in <span class="gradient-text">Action</span></h2>
-    <p class="section-subtitle">Switch between formats to see how quizzes look to students.</p>
-
-    <div class="demo-tabs">
-      <button class="demo-tab active" data-view="form">
-        <span class="demo-tab-icon">📝</span> Quiz Form
-      </button>
-      <button class="demo-tab" data-view="slide">
-        <span class="demo-tab-icon">📽️</span> Slide View
-      </button>
-    </div>
-
-    <div class="browser-frame">
-      <div class="browser-header">
-        <div class="browser-dots">
-          <span class="dot dot-red"></span>
-          <span class="dot dot-yellow"></span>
-          <span class="dot dot-green"></span>
+      <div class="hero-left">
+        <div class="hero-stats">
+          <span class="hero-stat">10K+ Questions Generated</span>
+          <span class="hero-stat">4.9 Teacher Rating</span>
+          <span class="hero-stat">500+ Classrooms</span>
         </div>
-        <div class="browser-url" id="demoUrl"><span class="url-icon">🔒</span> quikquiz.app/quiz/form</div>
+        <h1 class="hero-title">
+          Generate a <span class="gradient-text">Quiz</span> in Seconds
+        </h1>
+        <p class="hero-subtitle">
+          QuikQuiz lets teachers generate AI-assisted multiple-choice, true/false, and dropdown quizzes in seconds. Pick a subject, set a difficulty level, and let the system create balanced questions for you.
+        </p>
+        <p class="hero-subdetail">
+          Import PDFs or PPTX files, enable a timer for each quiz, and export results as a PDF.
+        </p>
+        <button class="btn btn-primary btn-lg hero-cta" id="heroCtaBtn">Generate Your First Quiz</button>
       </div>
-      <div class="browser-body" id="demoBody">
-        <!-- Rendered dynamically -->
-      </div>
-      <div class="browser-footer" id="demoFooter">
-        <!-- Rendered dynamically -->
-      </div>
-    </div>
-  </section>
-
-  <!-- Generator -->
-  <section class="card" id="generatorSection">
-    <h2 class="card-title">Create Your Quiz</h2>
-
-    <div id="authGate" class="auth-gate">
-      <p class="text-sm mb-4" style="color:var(--text-secondary);">Sign in with Google to start generating quizzes.</p>
-      <div id="gSignInBtn" class="flex justify-center"></div>
-    </div>
-
-    <div id="generatorForm" class="hidden">
-
-      <!-- Subject + Grade -->
-      <div class="form-row-2 mb-4">
-        <div class="form-group">
-          <label for="subjectSelect">Subject</label>
-          <select id="subjectSelect">
-            <option value="">Any Subject</option>
-            <option value="science">Science</option>
-            <option value="math">Math</option>
-            <option value="history">History</option>
-            <option value="english">English</option>
-            <option value="geography">Geography</option>
-          </select>
+      <div class="hero-right">
+        <div class="mock-quiz-card">
+          <h3 class="mock-question">What is the capital of France?</h3>
+          <ul class="mock-options">
+            <li>A) Berlin</li>
+            <li>B) Madrid</li>
+            <li class="selected">C) Paris</li>
+            <li>D) Rome</li>
+          </ul>
         </div>
-        <div class="form-group">
-          <label for="gradeSelect">Grade Level</label>
-          <select id="gradeSelect">
-            <option value="">Any Grade</option>
-            <option value="K-2">K-2</option>
-            <option value="3-5">3-5</option>
-            <option value="6-8">6-8</option>
-            <option value="9-12">9-12</option>
-          </select>
+      </div>
+    </section>
+
+    <!-- Value Prop Cards -->
+    <section class="value-cards reveal">
+      <div class="value-card">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
+        </svg>
+        <h3>Instant Generation</h3>
+        <p>AI creates balanced quizzes in seconds. No manual authoring required.</p>
+      </div>
+      <div class="value-card">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 0A11.958 11.958 0 0112 2.714z"/>
+        </svg>
+        <h3>Secure & Private</h3>
+        <p>Google OAuth login with no stored student data. Student answers are processed in memory only.</p>
+      </div>
+      <div class="value-card">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+        </svg>
+        <h3>Import Existing Content</h3>
+        <p>Upload PDFs or PPTX files and reuse your existing lesson material.</p>
+      </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="section-how reveal" id="howSection" role="region" aria-labelledby="howTitle">
+      <h2 class="section-title" id="howTitle">How QuikQuiz Works</h2>
+      <div class="stepper-wrapper">
+        <div class="stepper">
+          <div class="step active" data-step="1">1</div>
+          <div class="step" data-step="2">2</div>
+          <div class="step" data-step="3">3</div>
+        </div>
+        <div class="step-overlay show" data-step="1">
+          <h3>Choose a subject and difficulty</h3>
+          <p>Select a topic such as Math, History, or Science, and the level of challenge you need. You can also let the AI suggest topics based on your input.</p>
+        </div>
+        <div class="step-overlay" data-step="2">
+          <h3>Generate the quiz</h3>
+          <p>Click "Generate". The AI composes a set of balanced questions instantly. You can customize the number of questions and question types.</p>
+        </div>
+        <div class="step-overlay" data-step="3">
+          <h3>Share and track results</h3>
+          <p>Students take the quiz, you view live scores, and you can download a PDF report with an answer key. Quizzes are saved for future use.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card reveal" id="generatorSection">
+      <h2 class="card-title">Create Your Quiz</h2>
+
+      <div id="authGate" class="auth-gate">
+        <p class="text-sm mb-4" style="color:var(--text-secondary);">Sign in with Google to start generating quizzes.</p>
+        <div class="google-signin-wrapper">
+          <div id="gSignInBtn" class="flex justify-center"></div>
         </div>
       </div>
 
-      <!-- Suggested Topics -->
-      <div class="topic-chips" id="topicChips"></div>
+      <div id="generatorForm" class="hidden">
 
-      <!-- Topic input -->
-      <div class="form-group">
-        <label for="topicInput">Topic</label>
-        <input type="text" id="topicInput" placeholder="Type a topic or click a suggestion above..." style="width:100%;" />
-      </div>
-
-      <!-- Divider -->
-      <div class="section-divider">
-        <span class="section-divider-text">Upload</span>
-      </div>
-
-      <!-- File Upload -->
-      <div class="form-group">
-        <label>Or upload a file (PDF/PPTX)</label>
-        <div class="file-drop-zone" id="fileDropZone">
-          <div class="file-drop-content">
-            <span class="file-drop-icon">📄</span>
-            <p class="file-drop-text">Drop a file here, or click to browse</p>
-            <p class="file-drop-hint">Supports PDF and PPTX (max 2MB)</p>
+        <div class="form-row-2 mb-4">
+          <div class="form-group">
+            <label for="subjectSelect">Subject</label>
+            <select id="subjectSelect">
+              <option value="">Any Subject</option>
+              <option value="science">Science</option>
+              <option value="math">Math</option>
+              <option value="history">History</option>
+              <option value="english">English</option>
+              <option value="geography">Geography</option>
+            </select>
           </div>
-          <input type="file" id="fileInput" accept=".pdf,.pptx" hidden>
+          <div class="form-group">
+            <label for="gradeSelect">Grade Level</label>
+            <select id="gradeSelect">
+              <option value="">Any Grade</option>
+              <option value="K-2">K-2</option>
+              <option value="3-5">3-5</option>
+              <option value="6-8">6-8</option>
+              <option value="9-12">9-12</option>
+            </select>
+          </div>
         </div>
-        <div class="file-info hidden" id="fileInfo">
-          <span class="file-info-name" id="fileName"></span>
-          <button id="fileRemoveBtn" class="btn-icon" type="button">✕</button>
-        </div>
-      </div>
 
-      <!-- Divider -->
-      <div class="section-divider">
-        <span class="section-divider-text">Options</span>
-      </div>
+        <div class="topic-chips" id="topicChips"></div>
 
-      <!-- Options row -->
-      <div class="form-row-3 mb-4">
         <div class="form-group">
-          <label for="difficultySelect">Difficulty</label>
-          <select id="difficultySelect">
-            <option value="Easy" selected>Easy</option>
-            <option value="Medium">Medium</option>
-            <option value="Hard">Hard</option>
-          </select>
+          <label for="topicInput">Topic</label>
+          <input type="text" id="topicInput" placeholder="Type a topic or click a suggestion above..." style="width:100%;" />
         </div>
-        <div class="form-group">
-          <label for="numInput"># of Questions</label>
-          <input type="number" id="numInput" min="1" max="30" value="5" />
-        </div>
-        <div class="form-group">
-          <label for="formatSelect">Format</label>
-          <select id="formatSelect">
-            <option value="form">Quiz Form</option>
-            <option value="slide">Slide Questions</option>
-          </select>
-        </div>
-      </div>
 
-      <div class="form-group mb-4">
-        <label>Question Type</label>
-        <div class="checkbox-group" id="typeCheckboxes">
-          <label class="checkbox-label">
-            <input type="checkbox" value="multiple" checked> Multiple Choice
-          </label>
-          <label class="checkbox-label">
-            <input type="checkbox" value="truefalse"> True / False
-          </label>
-          <label class="checkbox-label">
-            <input type="checkbox" value="dropdown"> Dropdown
-          </label>
-        </div>
-      </div>
+        <div class="upload-section">
+          <div class="section-divider"></div>
 
-      <!-- Timer -->
-      <div class="form-row-2 mb-4">
-        <div class="form-group timer-toggle-group">
-          <input type="checkbox" id="timerToggle">
-          <label for="timerToggle">Enable timer</label>
-        </div>
-        <div class="form-group hidden" id="timerInputGroup">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-            <label for="timerInput" style="margin:0;">Time limit</label>
-            <div class="timer-presets" id="timerPresets">
-              <button type="button" class="timer-preset-btn" data-sec="30">30s</button>
-              <button type="button" class="timer-preset-btn" data-sec="60">1m</button>
-              <button type="button" class="timer-preset-btn" data-sec="300">5m</button>
+          <div class="form-group">
+            <label>Or upload a file (PDF/PPTX)</label>
+            <div class="file-drop-zone" id="fileDropZone">
+              <div class="file-drop-content">
+                <span class="file-drop-icon">&#x1F4C4;</span>
+                <p class="file-drop-text">Drop a file here, or click to browse</p>
+                <p class="file-drop-hint">Supports PDF and PPTX (max 2MB)</p>
+              </div>
+              <input type="file" id="fileInput" accept=".pdf,.pptx" hidden>
+            </div>
+            <div class="file-info hidden" id="fileInfo">
+              <span class="file-info-name" id="fileName"></span>
+              <button id="fileRemoveBtn" class="btn-icon" type="button">&#x2715;</button>
             </div>
           </div>
-          <input type="text" id="timerInput" placeholder="mm:ss" value="5:00" />
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="form-row-3 mb-4">
+          <div class="form-group">
+            <label for="difficultySelect">Difficulty</label>
+            <select id="difficultySelect">
+              <option value="Easy" selected>Easy</option>
+              <option value="Medium">Medium</option>
+              <option value="Hard">Hard</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="numInput">Number of Questions</label>
+            <input type="number" id="numInput" min="1" max="30" value="5" />
+          </div>
+          <div class="form-group">
+            <label for="formatSelect">Format</label>
+            <select id="formatSelect">
+              <option value="form">Quiz Form</option>
+              <option value="slide">Slide Questions</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group mb-4">
+          <label>Question Type</label>
+          <div class="checkbox-group" id="typeCheckboxes">
+            <label class="checkbox-label">
+              <input type="checkbox" value="multiple" checked> Multiple Choice
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" value="truefalse"> True / False
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" value="dropdown"> Dropdown
+            </label>
+          </div>
+        </div>
+
+        <div class="form-row-2 mb-4">
+          <div class="form-group timer-toggle-group">
+            <input type="checkbox" id="timerToggle">
+            <label for="timerToggle">Enable timer</label>
+          </div>
+          <div class="form-group hidden" id="timerInputGroup">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+              <label for="timerInput" style="margin:0;">Time limit</label>
+              <div class="timer-presets" id="timerPresets">
+                <button type="button" class="timer-preset-btn" data-sec="30">30s</button>
+                <button type="button" class="timer-preset-btn" data-sec="60">1m</button>
+                <button type="button" class="timer-preset-btn" data-sec="300">5m</button>
+              </div>
+            </div>
+            <input type="text" id="timerInput" placeholder="mm:ss" value="5:00" />
+          </div>
+        </div>
+
+        <button id="generateBtn" class="btn btn-primary btn-block">Generate Quiz</button>
+        <div id="usageInfo" class="usage-info mt-2"></div>
+
+        <div id="upgradeBenefits" class="hidden mt-2 text-sm" style="color:var(--text-secondary);">
+          <ul class="list-disc list-inside">
+            <li>Unlimited quiz generations</li>
+            <li>PDF export with answer key</li>
+            <li>File upload (PDF/PPTX) support</li>
+            <li>Priority support &amp; early feature access</li>
+          </ul>
         </div>
       </div>
 
-      <button id="generateBtn" class="btn btn-primary btn-block">Generate Quiz</button>
-      <div id="usageInfo" class="usage-info mt-2"></div>
-    </div>
-  </section>
-
-  <!-- Loading -->
-  <div class="spinner" id="spinner">
-    <div class="spinner-bars" aria-label="Loading">
-      <div class="spinner-bar"></div>
-      <div class="spinner-bar"></div>
-      <div class="spinner-bar"></div>
-      <div class="spinner-bar"></div>
-      <div class="spinner-bar"></div>
-    </div>
-    <div class="spinner-text" id="spinnerText">Generating your quiz...</div>
-  </div>
-
-  <!-- Quiz Stack -->
-  <section class="quiz-area" id="quizArea">
-    <div id="quizStack">
-      <div class="quiz-stack-empty" id="quizStackEmpty">
-        <div class="quiz-stack-empty-icon">📋</div>
-        <p class="quiz-stack-empty-title">No quizzes yet</p>
-        <p class="quiz-stack-empty-text">Generate your first quiz above and it will appear here.</p>
+      <div id="demoSignUpPrompt" class="hidden">
+        <div class="section-divider"></div>
+        <p class="text-sm mb-3" style="color:var(--text-secondary);">Demo limit reached. Sign in to unlock full access.</p>
+        <button id="demoGoogleBtn" class="btn-custom-google">Sign in with Google</button>
       </div>
+    </section>
+
+    <!-- Loading -->
+    <div class="spinner" id="spinner">
+      <div class="spinner-bars" aria-label="Loading">
+        <div class="spinner-bar"></div>
+        <div class="spinner-bar"></div>
+        <div class="spinner-bar"></div>
+        <div class="spinner-bar"></div>
+        <div class="spinner-bar"></div>
+      </div>
+      <div class="spinner-text" id="spinnerText">Generating your quiz...</div>
     </div>
-  </section>
+
+    <!-- Quiz Stack -->
+    <section class="quiz-area" id="quizArea">
+      <div id="quizStack">
+        <div class="quiz-stack-empty" id="quizStackEmpty">
+          <div class="quiz-stack-empty-icon">&#x1F4CB;</div>
+          <p class="quiz-stack-empty-title">No quizzes yet</p>
+          <p class="quiz-stack-empty-text">Generate your first quiz above and it will appear here.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq-section reveal" id="faqSection" style="margin-bottom:48px;">
+      <h2 class="section-title" id="faqTitle">FAQs</h2>
+
+      <div class="faq-item">
+        <input type="checkbox" id="faq1" class="faq-input" />
+        <label class="faq-label" for="faq1">Do I need an OpenAI API key?</label>
+        <div class="faq-content">
+          <p>No. The service runs the model on the backend; you only need a Google sign-in.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <input type="checkbox" id="faq2" class="faq-input" />
+        <label class="faq-label" for="faq2">Can I use my own PDFs?</label>
+        <div class="faq-content">
+          <p>Yes. Upload a PDF or PPTX and the system will extract relevant text for the quiz.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <input type="checkbox" id="faq3" class="faq-input" />
+        <label class="faq-label" for="faq3">Is student data stored?</label>
+        <div class="faq-content">
+          <p>No. Student answers are processed in-memory only for scoring; nothing is saved.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <input type="checkbox" id="faq4" class="faq-input" />
+        <label class="faq-label" for="faq4">What browsers are supported?</label>
+        <div class="faq-content">
+          <p>The app works on any modern desktop or mobile browser that supports ES6 and CSS blur.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <input type="checkbox" id="faq5" class="faq-input" />
+        <label class="faq-label" for="faq5">How can I cancel my subscription?</label>
+        <div class="faq-content">
+          <p>Cancel anytime via the Stripe portal linked in your account settings.</p>
+        </div>
+      </div>
+    </section>
 
 </main>
 
@@ -352,21 +352,17 @@
       <li>True/False & multiple choice</li>
       <li>Custom question count & timer</li>
     </ul>
-    <button id="subscribeBtnPaywall" class="btn btn-primary btn-block">Subscribe — $9/month</button>
+    <button id="subscribeBtnPaywall" class="btn btn-primary btn-block">Upgrade to Pro</button>
     <button id="paywallCancelBtn" class="btn btn-secondary btn-block mt-4">Maybe later</button>
   </div>
 </div>
 
+<!-- Footer -->
 <footer class="text-center py-8 text-sm mt-12" style="border-top:1px solid var(--border);color:var(--text-muted);">
-  <div class="main-container">
-    <div class="flex justify-center gap-6 mb-4">
-      <a href="/privacy" class="footer-link">Privacy</a>
-      <a href="/terms" class="footer-link">Terms</a>
-      <a href="/contact" class="footer-link">Contact</a>
-    </div>
-    <div>QuikQuiz &mdash; AI‑powered quiz generation for teachers and tutors.</div>
-  </div>
+  <div class="max-w-4xl mx-auto px-4">QuikQuiz &mdash; AI-powered quiz generation for teachers and tutors.</div>
 </footer>
+
+<div id="hiddenGoogleBtn" class="hidden"></div>
 
 <!-- Scripts -->
 <script src="/js/auth.js"></script>
@@ -374,6 +370,9 @@
 <script src="/js/topics.js"></script>
 <script src="/js/quiz.js"></script>
 <script src="/js/app.js"></script>
+<script src="/js/homepage.js"></script>
+<script src="/js/scroll-reveal.js"></script>
+<script src="/js/scroll-to-top.js"></script>
 
 </body>
 </html>

@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', async function () {
   await loadConfig();
   initDarkMode();
   checkStripeReturn();
-  initDemo();
   updateUI();
   setupEventListeners();
   initGoogleSignIn();
@@ -266,10 +265,18 @@ function getSelectedTypes() {
   return types.length === 3 ? 'all' : types.join(',');
 }
 
-/* ===== Generate Handler ===== */
+  /* ===== Generate Handler ===== */
 async function handleGenerate() {
   const user = getUser();
-  if (!user) return;
+
+  if (!user) {
+    if (typeof google === 'undefined' || !window.QUIKQUIZ_CONFIG?.googleClientId) {
+      showToast('Sign-in is not configured yet.', 'error');
+    } else {
+      triggerGoogleSignIn();
+    }
+    return;
+  }
 
   if (!isPaid() && getUsageCount() >= 1) {
     document.getElementById('paywallOverlay').classList.add('active');
@@ -290,11 +297,16 @@ async function handleGenerate() {
     showToast('Select at least one question type.', 'error');
     return;
   }
-  const num = parseInt(document.getElementById('numInput').value);
+  var num = parseInt(document.getElementById('numInput').value);
 
   if (!num || num < 1 || num > 30) {
     showToast('Number of questions must be between 1 and 30.', 'error');
     return;
+  }
+
+  var isDemo = !isPaid() && getUsageCount() < 1;
+  if (isDemo) {
+    num = Math.min(10, num);
   }
 
   document.getElementById('spinner').classList.add('active');
@@ -337,7 +349,7 @@ async function handleGenerate() {
     if (!isPaid()) incrementUsage();
     updateUsageInfo();
     updateUI();
-    showToast('Quiz generated successfully!', 'success');
+    showToast(isDemo ? 'Free demo quiz generated! Upgrade to unlock unlimited.' : 'Quiz generated successfully!', 'success');
   } catch (err) {
     showToast(err.message || 'Failed to generate quiz.', 'error');
   } finally {
@@ -350,6 +362,10 @@ async function handleGenerate() {
 
 /* ===== Subscribe Handler ===== */
 async function handleSubscribe() {
+  if (!getUser()) {
+    triggerGoogleSignIn();
+    return;
+  }
   try {
     const url = await createCheckoutSession();
     if (url) window.location.href = url;
@@ -377,6 +393,11 @@ function updateUI() {
   const subscribeHeader = document.getElementById('subscribeBtnHeader');
   const signOutBtn = document.getElementById('signOutBtn');
   const gSignInWrapper = document.getElementById('gSignInWrapper');
+  const generatorSection = document.getElementById('generatorSection');
+  const customGoogleBtn = document.getElementById('customGoogleBtn');
+  const demoPrompt = document.getElementById('demoSignUpPrompt');
+  const generateBtn = document.getElementById('generateBtn');
+  const upgradeBenefits = document.getElementById('upgradeBenefits');
 
   if (user) {
     userName.textContent = user.name;
@@ -385,18 +406,54 @@ function updateUI() {
     userAvatar.style.display = 'block';
     authGate.classList.add('hidden');
     generatorForm.classList.remove('hidden');
+    if (paid) {
+      generatorForm.classList.remove('demo-mode');
+      if (generatorSection) generatorSection.classList.remove('demo-mode');
+    } else {
+      generatorForm.classList.add('demo-mode');
+      if (generatorSection) generatorSection.classList.add('demo-mode');
+    }
     if (gSignInWrapper) gSignInWrapper.style.display = 'none';
+    if (customGoogleBtn) customGoogleBtn.classList.add('hidden');
+    if (demoPrompt) demoPrompt.classList.add('hidden');
     signOutBtn.classList.remove('hidden');
     subscribeHeader.classList.toggle('hidden', paid);
     updateUsageInfo();
+
+    if (generateBtn) {
+      generateBtn.classList.remove('hidden');
+      generateBtn.disabled = false;
+      if (paid) {
+        generateBtn.textContent = 'Generate Quiz';
+      } else if (getUsageCount() < 1) {
+        generateBtn.textContent = 'Generate Demo Quiz';
+      } else {
+        generateBtn.textContent = 'Upgrade now to generate more';
+      }
+    }
+    if (upgradeBenefits) {
+      upgradeBenefits.classList.toggle('hidden', paid || getUsageCount() < 1);
+    }
   } else {
     userName.style.display = 'none';
     userAvatar.style.display = 'none';
-    authGate.classList.remove('hidden');
-    generatorForm.classList.add('hidden');
-    if (gSignInWrapper) gSignInWrapper.style.display = 'block';
+    authGate.classList.add('hidden');
+    generatorForm.classList.remove('hidden');
+    generatorForm.classList.add('demo-mode');
+    if (generatorSection) generatorSection.classList.add('demo-mode');
+    if (gSignInWrapper) gSignInWrapper.style.display = 'none';
+    if (customGoogleBtn) customGoogleBtn.classList.remove('hidden');
+    if (demoPrompt) demoPrompt.classList.add('hidden');
     signOutBtn.classList.add('hidden');
     subscribeHeader.classList.add('hidden');
+
+    if (generateBtn) {
+      generateBtn.classList.remove('hidden');
+      generateBtn.disabled = false;
+      generateBtn.textContent = 'Sign in to generate free demo quiz';
+    }
+    if (upgradeBenefits) upgradeBenefits.classList.add('hidden');
+
     document.getElementById('usageInfo').textContent = '';
   }
 

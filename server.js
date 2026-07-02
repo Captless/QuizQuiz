@@ -551,6 +551,46 @@ app.get('/api/config', (req, res) => {
   });
 });
 
+/* ===== Demo quiz (no auth required) ===== */
+const DEMO_QUESTIONS = [
+  { question: 'What is the capital of France?', type: 'multiple', options: ['Paris', 'Berlin', 'Madrid', 'Rome'], answer: 'Paris' },
+  { question: 'Water freezes at 0°C.', type: 'truefalse', options: ['True', 'False'], answer: 'True' },
+  { question: 'Which planet is known as the Red Planet?', type: 'multiple', options: ['Mars', 'Venus', 'Jupiter', 'Saturn'], answer: 'Mars' },
+  { question: 'Select the chemical symbol for gold.', type: 'dropdown', options: ['Au', 'Ag', 'Fe', 'Cu', 'Zn'], answer: 'Au' },
+  { question: 'The Great Wall of China is visible from space.', type: 'truefalse', options: ['True', 'False'], answer: 'False' },
+  { question: 'What is the largest ocean on Earth?', type: 'multiple', options: ['Pacific', 'Atlantic', 'Indian', 'Arctic'], answer: 'Pacific' },
+  { question: 'Which gas do plants absorb during photosynthesis?', type: 'dropdown', options: ['Carbon dioxide', 'Oxygen', 'Nitrogen', 'Hydrogen', 'Methane'], answer: 'Carbon dioxide' },
+  { question: 'Mount Everest is located in the Himalayas.', type: 'truefalse', options: ['True', 'False'], answer: 'True' },
+  { question: 'What element has the atomic number 1?', type: 'multiple', options: ['Hydrogen', 'Helium', 'Lithium', 'Carbon'], answer: 'Hydrogen' },
+  { question: 'Select the longest river in the world.', type: 'dropdown', options: ['Nile', 'Amazon', 'Yangtze', 'Mississippi', 'Danube'], answer: 'Nile' },
+  { question: 'Light travels faster than sound.', type: 'truefalse', options: ['True', 'False'], answer: 'True' },
+  { question: 'What year did World War II end?', type: 'multiple', options: ['1945', '1944', '1946', '1943'], answer: '1945' },
+  { question: 'Which organ pumps blood in the human body?', type: 'dropdown', options: ['Heart', 'Lungs', 'Liver', 'Kidney', 'Brain'], answer: 'Heart' },
+  { question: 'The Earth is flat.', type: 'truefalse', options: ['True', 'False'], answer: 'False' },
+  { question: 'Who wrote "Romeo and Juliet"?', type: 'multiple', options: ['Shakespeare', 'Dickens', 'Austen', 'Hemingway'], answer: 'Shakespeare' },
+  { question: 'What is the speed of light approximately?', type: 'dropdown', options: ['300,000 km/s', '150,000 km/s', '500,000 km/s', '100,000 km/s', '1,000,000 km/s'], answer: '300,000 km/s' },
+  { question: 'Humans have 23 pairs of chromosomes.', type: 'truefalse', options: ['True', 'False'], answer: 'True' },
+  { question: 'Which country has the largest population?', type: 'multiple', options: ['India', 'China', 'USA', 'Indonesia'], answer: 'India' },
+  { question: 'What is the smallest prime number?', type: 'dropdown', options: ['2', '1', '3', '5', '7'], answer: '2' },
+  { question: 'Octopuses have three hearts.', type: 'truefalse', options: ['True', 'False'], answer: 'True' },
+];
+
+app.get('/api/quiz/demo', (req, res) => {
+  var num = Math.min(10, Math.max(1, parseInt(req.query.num) || 5));
+  var format = req.query.format === 'slide' ? 'slide' : 'form';
+
+  var shuffled = DEMO_QUESTIONS.slice().sort(function () { return Math.random() - 0.5; });
+  var selected = shuffled.slice(0, num);
+
+  res.json({
+    title: 'Demo Quiz',
+    subject: 'General Knowledge',
+    topic: 'Demo',
+    format: format,
+    questions: selected
+  });
+});
+
 /* ===== Save a quiz for sharing ===== */
 app.post('/api/quiz/save', (req, res) => {
   const { questions, topic, difficulty, showScore, format, title, subject } = req.body;

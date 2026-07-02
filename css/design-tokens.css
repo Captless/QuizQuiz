@@ -73,6 +73,13 @@
 
   /* Transitions */
   --transition: 0.15s ease;
+
+  /* Layout */
+  --max-content-width: 1120px;
+  --spacing-lg: 64px;
+  --spacing-xl: 24px;
+  --stepper-size: 48px;
+  --carousel-speed: 8s;
 }
 
 /* ===== Glass Surface Utility ===== */
