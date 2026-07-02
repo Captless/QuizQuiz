@@ -40,7 +40,7 @@ export default function FileUpload({ file, onChange, disabled }: Props) {
           onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }}
         >
           <div className="file-drop-content">
-            <div className="file-drop-icon">📄</div>
+            <div className="file-drop-icon">&#8593;</div>
             <p className="file-drop-text">Drop a file here, or click to browse</p>
             <p className="file-drop-hint">Supports PDF and PPTX (max 2MB)</p>
           </div>

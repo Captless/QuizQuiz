@@ -19,7 +19,7 @@ export default function QuizStack({ entries, onDelete, onUpdate, onShare, onResu
   if (entries.length === 0) {
     return (
       <div className="quiz-stack-empty">
-        <div className="quiz-stack-empty-icon">📋</div>
+        <div className="quiz-stack-empty-icon">—</div>
         <p className="quiz-stack-empty-title">No quizzes yet</p>
         <p className="quiz-stack-empty-text">Generate your first quiz above and it will appear here.</p>
       </div>

@@ -126,7 +126,6 @@ export default function GeneratorPage() {
   const handleGenerate = useCallback(async () => {
     if (generating) return
     if (!user) { signIn(); return }
-    if (!paid && usageCount >= 1) { setShowPaywall(true); return }
     if (!topic && !file) { addToast('Please enter a topic or upload a file.', 'error'); return }
     const typeStr = getSelectedTypes()
     if (!typeStr) { addToast('Select at least one question type.', 'error'); return }
@@ -270,7 +269,9 @@ export default function GeneratorPage() {
   }, [user, signIn, setPaidStatus])
 
   const isDemo = !paid && usageCount < 1
-  const genBtnText = !user ? 'Sign in to generate free demo quiz' : paid ? 'Generate Quiz' : isDemo ? 'Generate Demo Quiz' : 'Upgrade now to generate more'
+  const outOfFreeQuota = !paid && usageCount >= 1
+  const genBtnText = !user ? 'Sign in to generate free demo quiz' : paid ? 'Generate Quiz' : isDemo ? 'Generate Demo Quiz' : 'Upgrade to Pro to generate more quizzes'
+  const buttonLabel = outOfFreeQuota ? 'Upgrade to Pro to generate more quizzes' : genBtnText
 
   const stepContent = (s: number) => {
     switch (s) {
@@ -301,9 +302,9 @@ export default function GeneratorPage() {
             <span className="gradient-text">QuikQuiz</span>
           </a>
           <div className="flex-center" style={{ gap: '12px' }}>
-            <button onClick={() => setDark(!dark)} className="dark-toggle">
-              {dark ? '☀️' : '🌙'}
-            </button>
+<button onClick={() => setDark(!dark)} className="dark-toggle">
+                {dark ? '☀' : '☾'}
+              </button>
             {user && !paid && (
               <button onClick={handleSubscribe} className="btn btn-primary btn-sm">
                 Upgrade to Pro
@@ -475,25 +476,15 @@ export default function GeneratorPage() {
             <TimerInput enabled={timerEnabled} seconds={timerSeconds} onToggle={setTimerEnabled} onChange={setTimerSeconds} />
 
             {/* Generate Button */}
-            <button onClick={handleGenerate} disabled={generating || !user || (!paid && usageCount > 0)}
+            <button onClick={outOfFreeQuota ? () => setShowPaywall(true) : handleGenerate} disabled={generating || !user}
               className={`btn btn-block ${generating ? 'btn-secondary' : !user ? 'btn-primary' : paid ? 'btn-primary' : isDemo ? 'btn-primary' : 'btn-warning'}`}>
-              {generating ? genProgress || 'Generating...' : genBtnText}
+              {generating ? genProgress || 'Generating...' : buttonLabel}
             </button>
 
             {/* Usage Info */}
             <div className="usage-info">
-              {paid ? '✓ Premium' : `Free generations remaining: ${Math.max(0, 1 - usageCount)}`}
+              {paid ? 'Premium Plan' : `Free generations remaining: ${Math.max(0, 1 - usageCount)}`}
             </div>
-
-            {/* Upgrade Benefits */}
-            {!paid && usageCount > 0 && (
-              <ul style={{ marginTop: '12px', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.8', listStyle: 'disc', paddingLeft: '20px' }}>
-                <li>Unlimited quiz generations</li>
-                <li>PDF export with answer key</li>
-                <li>File upload (PDF/PPTX) support</li>
-                <li>Priority support & early feature access</li>
-              </ul>
-            )}
           </div>
         </section>
 

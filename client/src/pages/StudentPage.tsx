@@ -142,7 +142,7 @@ export default function StudentPage() {
               <span className={`timer-display ${timerClass}`}>{timerDisplay}</span>
             )}
             <button onClick={() => setDark(!dark)} className="dark-toggle">
-              {dark ? '☀️' : '🌙'}
+              {dark ? '☀' : '☾'}
             </button>
           </div>
         </div>
