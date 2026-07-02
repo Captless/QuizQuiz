@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuikQuiz — AI Quiz Generator</title>
+<meta name="description" content="Generate AI-powered multiple-choice quizzes in seconds. Perfect for teachers and tutors.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/css/style.css">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://js.stripe.com/v3/"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<style>.hidden{display:none!important}</style>
+</head>
+<body>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Header -->
+<header>
+  <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="/" class="text-2xl font-extrabold tracking-tight" style="color:var(--accent);">
+      Quik<span style="color:var(--text-primary);">Quiz</span>
+    </a>
+    <div class="flex items-center gap-3">
+      <span id="userName" class="text-sm font-medium hidden" style="color:var(--text-secondary);"></span>
+      <img id="userAvatar" class="w-9 h-9 rounded-full border-2 object-cover hidden" style="border-color:var(--border);" alt="Avatar">
+      <button id="darkToggle" class="dark-toggle" title="Toggle dark mode">🌙</button>
+      <button id="subscribeBtnHeader" class="btn btn-primary btn-sm hidden">Subscribe $9/mo</button>
+      <div id="gSignInWrapper"></div>
+      <button id="signOutBtn" class="btn btn-secondary btn-sm hidden">Sign Out</button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-4xl mx-auto px-4">
+
+  <!-- Hero -->
+  <section class="hero" id="heroSection">
+    <div class="hero-bg">
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+      <div class="blob blob-3"></div>
+    </div>
+    <div class="hero-stats">
+      <span class="hero-stat">10K+ Questions Generated</span>
+      <span class="hero-stat">4.9 ★ Teacher Rating</span>
+      <span class="hero-stat">500+ Classrooms</span>
+    </div>
+    <h1 class="hero-title">
+      Generate a <span class="gradient-text">Quiz</span> in Seconds
+    </h1>
+    <p class="hero-subtitle">
+      Create classroom-ready quizzes with AI. Trusted by teachers worldwide.
+    </p>
+    <button class="btn btn-primary btn-lg hero-cta" id="heroCtaBtn">Generate Your First Quiz</button>
+  </section>
+
+  <!-- Trusted Divider -->
+  <div class="trusted-divider">
+    <span class="trusted-line"></span>
+    <span class="trusted-icon">✦</span>
+    <span class="trusted-line"></span>
+  </div>
+
+  <!-- Demo Showcase -->
+  <section class="demo-showcase" id="demoQuizSection">
+    <h2 class="section-title">See It in <span class="gradient-text">Action</span></h2>
+    <p class="section-subtitle">Switch between formats to see how quizzes look to students.</p>
+
+    <div class="demo-tabs">
+      <button class="demo-tab active" data-view="form">
+        <span class="demo-tab-icon">📝</span> Quiz Form
+      </button>
+      <button class="demo-tab" data-view="slide">
+        <span class="demo-tab-icon">📽️</span> Slide View
+      </button>
+    </div>
+
+    <div class="browser-frame">
+      <div class="browser-header">
+        <div class="browser-dots">
+          <span class="dot dot-red"></span>
+          <span class="dot dot-yellow"></span>
+          <span class="dot dot-green"></span>
+        </div>
+        <div class="browser-url" id="demoUrl"><span class="url-icon">🔒</span> quikquiz.app/quiz/form</div>
+      </div>
+      <div class="browser-body" id="demoBody">
+        <!-- Rendered dynamically -->
+      </div>
+      <div class="browser-footer" id="demoFooter">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Generator -->
+  <section class="card" id="generatorSection">
+    <h2 class="card-title">Create Your Quiz</h2>
+
+    <div id="authGate" class="auth-gate">
+      <p class="text-sm mb-4" style="color:var(--text-secondary);">Sign in with Google to start generating quizzes.</p>
+      <div id="gSignInBtn" class="flex justify-center"></div>
+    </div>
+
+    <div id="generatorForm" class="hidden">
+
+      <!-- Subject + Grade -->
+      <div class="form-row-2 mb-4">
+        <div class="form-group">
+          <label for="subjectSelect">Subject</label>
+          <select id="subjectSelect">
+            <option value="">Any Subject</option>
+            <option value="science">Science</option>
+            <option value="math">Math</option>
+            <option value="history">History</option>
+            <option value="english">English</option>
+            <option value="geography">Geography</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="gradeSelect">Grade Level</label>
+          <select id="gradeSelect">
+            <option value="">Any Grade</option>
+            <option value="K-2">K-2</option>
+            <option value="3-5">3-5</option>
+            <option value="6-8">6-8</option>
+            <option value="9-12">9-12</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Suggested Topics -->
+      <div class="topic-chips" id="topicChips"></div>
+
+      <!-- Topic input -->
+      <div class="form-group">
+        <label for="topicInput">Topic</label>
+        <input type="text" id="topicInput" placeholder="Type a topic or click a suggestion above..." style="width:100%;" />
+      </div>
+
+      <!-- File Upload -->
+      <div class="form-group">
+        <label>Or upload a file (PDF/PPTX)</label>
+        <div class="file-drop-zone" id="fileDropZone">
+          <div class="file-drop-content">
+            <span class="file-drop-icon">📄</span>
+            <p class="file-drop-text">Drop a file here, or click to browse</p>
+            <p class="file-drop-hint">Supports PDF and PPTX (max 2MB)</p>
+          </div>
+          <input type="file" id="fileInput" accept=".pdf,.pptx" hidden>
+        </div>
+        <div class="file-info hidden" id="fileInfo">
+          <span class="file-info-name" id="fileName"></span>
+          <button id="fileRemoveBtn" class="btn-icon" type="button">✕</button>
+        </div>
+      </div>
+
+      <!-- Options row -->
+      <div class="form-row-3 mb-4">
+        <div class="form-group">
+          <label for="difficultySelect">Difficulty</label>
+          <select id="difficultySelect">
+            <option value="Easy" selected>Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="numInput"># of Questions</label>
+          <input type="number" id="numInput" min="1" max="30" value="5" />
+        </div>
+        <div class="form-group">
+          <label for="formatSelect">Format</label>
+          <select id="formatSelect">
+            <option value="form">Quiz Form</option>
+            <option value="slide">Slide Questions</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group mb-4">
+        <label>Question Type</label>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;" id="typeCheckboxes">
+          <label class="checkbox-label" style="padding:4px 0;">
+            <input type="checkbox" value="multiple" checked> Multiple Choice
+          </label>
+          <label class="checkbox-label" style="padding:4px 0;">
+            <input type="checkbox" value="truefalse"> True / False
+          </label>
+          <label class="checkbox-label" style="padding:4px 0;">
+            <input type="checkbox" value="dropdown"> Dropdown
+          </label>
+        </div>
+      </div>
+
+      <!-- Timer -->
+      <div class="form-row-2 mb-4">
+        <div class="form-group flex items-center gap-3" style="padding-top:24px;">
+          <input type="checkbox" id="timerToggle" style="width:auto;">
+          <label for="timerToggle" style="margin:0;cursor:pointer;">Enable timer</label>
+        </div>
+        <div class="form-group hidden" id="timerInputGroup">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <label for="timerInput" style="margin:0;">Time limit</label>
+            <div class="timer-presets" id="timerPresets">
+              <button type="button" class="timer-preset-btn" data-sec="30">30s</button>
+              <button type="button" class="timer-preset-btn" data-sec="60">1m</button>
+              <button type="button" class="timer-preset-btn" data-sec="300">5m</button>
+            </div>
+          </div>
+          <input type="text" id="timerInput" placeholder="mm:ss" value="5:00" />
+        </div>
+      </div>
+
+      <button id="generateBtn" class="btn btn-primary btn-block">Generate Quiz</button>
+      <div id="usageInfo" class="usage-info mt-2"></div>
+    </div>
+  </section>
+
+  <!-- Loading -->
+  <div class="spinner" id="spinner">
+    <div class="spinner-bars" aria-label="Loading">
+      <div class="spinner-bar"></div>
+      <div class="spinner-bar"></div>
+      <div class="spinner-bar"></div>
+      <div class="spinner-bar"></div>
+      <div class="spinner-bar"></div>
+    </div>
+    <div class="spinner-text" id="spinnerText">Generating your quiz...</div>
+  </div>
+
+  <!-- Quiz Stack -->
+  <section class="quiz-area" id="quizArea">
+    <div id="quizStack"></div>
+  </section>
+
+
+
+</main>
+
+<!-- Paywall Modal -->
+<div class="paywall-overlay" id="paywallOverlay">
+  <div class="paywall-modal">
+    <div class="paywall-price">$9<span class="text-lg font-semibold">/mo</span></div>
+    <div class="paywall-period">Unlimited access</div>
+    <h2 class="text-2xl font-extrabold mt-2 mb-2" style="color:var(--text-primary);">Upgrade to QuikQuiz Pro</h2>
+    <p style="color:var(--text-secondary);" class="text-sm mb-6">You've used your free quiz. Subscribe to generate unlimited quizzes with PDF export.</p>
+    <ul class="paywall-features">
+      <li>Unlimited quiz generation</li>
+      <li>PDF export with answer key</li>
+      <li>Multiple difficulty levels</li>
+      <li>True/False & multiple choice</li>
+      <li>Custom question count & timer</li>
+    </ul>
+    <button id="subscribeBtnPaywall" class="btn btn-primary btn-block">Subscribe — $9/month</button>
+    <button id="paywallCancelBtn" class="btn btn-secondary btn-block mt-4">Maybe later</button>
+  </div>
+</div>
+
+<footer class="text-center py-8 text-sm mt-12" style="border-top:1px solid var(--border);color:var(--text-muted);">
+  <div class="max-w-4xl mx-auto px-4">QuikQuiz &mdash; AI-powered quiz generation for teachers and tutors.</div>
+</footer>
+
+<!-- Scripts -->
+<script src="/js/auth.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/topics.js"></script>
+<script src="/js/quiz.js"></script>
+<script src="/js/app.js"></script>
+
+</body>
+</html>
