@@ -5,7 +5,7 @@
   "description": "AI-powered quiz generator for teachers and trainers",
   "scripts": {
     "dev": "concurrently \"node server/index.js\" \"cd client && npm run dev\"",
-    "build": "cd client && npm install --include=dev && npm run build",
+    "build": "npm install && cd client && npm install --include=dev && npm run build",
     "start": "node server/index.js",
     "lint": "cd client && npm run lint"
   },
