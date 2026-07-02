@@ -11,6 +11,7 @@ export interface QuizQuestion {
   options: string[]
   answer: string
   emoji?: string
+  shuffledOptions?: string[]
 }
 
 export interface SharedQuiz {

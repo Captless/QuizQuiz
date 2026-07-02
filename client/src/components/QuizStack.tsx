@@ -14,6 +14,7 @@ interface Props {
 
 export default function QuizStack({ entries, onDelete, onUpdate, onShare, onResults, onExportPDF }: Props) {
   const [expanded, setExpanded] = useState<string | null>(null)
+  const [resultsModal, setResultsModal] = useState<{ entry: QuizEntry; results: QuizResult[] } | null>(null)
 
   if (entries.length === 0) {
     return (
@@ -27,6 +28,13 @@ export default function QuizStack({ entries, onDelete, onUpdate, onShare, onResu
 
   const toggle = (id: string) => setExpanded(prev => prev === id ? null : id)
 
+  const openResults = async (entry: QuizEntry) => {
+    if (!entry.shareId) return
+    const r = await onResults(entry.shareId, entry.questions)
+    if (r.length === 0) { alert('No submissions yet. Share the link with students.'); return }
+    setResultsModal({ entry, results: r })
+  }
+
   return (
     <div>
       {entries.map(entry => (
@@ -38,10 +46,17 @@ export default function QuizStack({ entries, onDelete, onUpdate, onShare, onResu
           onDelete={() => onDelete(entry.id)}
           onUpdate={(u) => onUpdate(entry.id, u)}
           onShare={() => onShare(entry)}
-          onResults={async () => { if (entry.shareId) return onResults(entry.shareId, entry.questions); return [] }}
+          onResults={() => openResults(entry)}
           onExportPDF={() => onExportPDF(entry)}
         />
       ))}
+      {resultsModal && (
+        <ResultsModal
+          entry={resultsModal.entry}
+          results={resultsModal.results}
+          onClose={() => setResultsModal(null)}
+        />
+      )}
     </div>
   )
 }
@@ -55,7 +70,7 @@ function QuizEntryCard({ entry, expanded, onToggle, onDelete, onUpdate, onShare,
   onDelete: () => void
   onUpdate: (u: Partial<QuizEntry>) => void
   onShare: () => Promise<void>
-  onResults: () => Promise<QuizResult[]>
+  onResults: () => Promise<void>
   onExportPDF: () => void
 }) {
   const [title, setTitle] = useState(entry.title)
@@ -71,16 +86,16 @@ function QuizEntryCard({ entry, expanded, onToggle, onDelete, onUpdate, onShare,
 
   return (
     <div className="quiz-entry card">
-      <div className="quiz-entry-header" onClick={onToggle}>
-        <div className="quiz-entry-info">
+      <div className="quiz-entry-header">
+        <div className="quiz-entry-info" onClick={e => e.stopPropagation()}>
           <div className="quiz-entry-title-row">
             {editing ? (
-              <input ref={inputRef} value={title} onChange={e => setTitle(e.target.value)}
+              <input ref={inputRef} value={title} onChange={e => setTitle(e.target.value.slice(0, 50))}
                 onBlur={finishTitle} onKeyDown={e => { if (e.key === 'Enter') finishTitle() }}
-                className="quiz-entry-title-input" autoFocus
+                className="quiz-entry-title-input" autoFocus maxLength={50}
               />
             ) : (
-              <span className="quiz-entry-title" onClick={e => { e.stopPropagation(); setEditing(true); }}>{entry.title}</span>
+              <span className="quiz-entry-title" title={entry.title} onClick={e => { e.stopPropagation(); setEditing(true); }}>{entry.title.slice(0, 20)}{entry.title.length > 20 ? '…' : ''}</span>
             )}
             {entry.subject && <span className="quiz-entry-subject">{entry.subject}</span>}
             <span className={`quiz-entry-badge ${diffClass}`}>{entry.difficulty}</span>
@@ -88,14 +103,14 @@ function QuizEntryCard({ entry, expanded, onToggle, onDelete, onUpdate, onShare,
           </div>
         </div>
         <div className="quiz-entry-actions">
-          <button className="btn btn-sm btn-outline entry-delete-btn" onClick={e => { e.stopPropagation(); if (confirm('Delete this quiz?')) onDelete() }}>Delete</button>
-          <button className="btn btn-sm btn-outline" onClick={e => { e.stopPropagation(); onExportPDF() }}>PDF</button>
-          <button className={`btn btn-sm entry-score-toggle`} data-on={entry.showScore ? 'true' : 'false'} onClick={e => { e.stopPropagation(); onUpdate({ showScore: !entry.showScore }) }}>
-            {entry.showScore ? '✓ Score' : '✗ Score'}
+          <button className="btn btn-sm btn-outline entry-delete-btn" type="button" title="Delete quiz" onClick={e => { e.stopPropagation(); if (confirm('Delete this quiz?')) onDelete() }}>Delete</button>
+          <button className="btn btn-sm btn-outline action-btn" type="button" title="Export PDF" onClick={e => { e.stopPropagation(); onExportPDF() }}>PDF</button>
+          <button className={`btn btn-sm entry-score-toggle action-btn`} type="button" title={entry.showScore ? 'Hide scores' : 'Show scores'} data-on={entry.showScore ? 'true' : 'false'} onClick={e => { e.stopPropagation(); onUpdate({ showScore: !entry.showScore }) }}>
+            <span className="score-icon">{entry.showScore ? '✓' : '✗'}</span> Score
           </button>
-          <button className="btn btn-sm btn-outline" onClick={async e => { e.stopPropagation(); const r = await onResults(); if (r.length === 0) alert('No submissions yet. Share the link with students.'); else showResultsModal(entry, r) }}>Results</button>
-          <button className="btn btn-sm btn-outline" onClick={e => { e.stopPropagation(); onShare() }}>Share</button>
-          <span className="entry-toggle" onClick={onToggle}>{expanded ? '▼' : '▶'}</span>
+          <button className="btn btn-sm btn-outline action-btn" type="button" title="View results" onClick={e => { e.stopPropagation(); onResults() }}>Results</button>
+          <button className="btn btn-sm btn-outline action-btn" type="button" title="Share quiz" onClick={e => { e.stopPropagation(); onShare() }}>Share</button>
+          <span className="entry-toggle" onClick={e => { e.stopPropagation(); onToggle() }} title={expanded ? 'Collapse' : 'Expand'}>{expanded ? '▼' : '▶'}</span>
         </div>
       </div>
 
@@ -116,59 +131,89 @@ function QuizEntryCard({ entry, expanded, onToggle, onDelete, onUpdate, onShare,
 
 /* ===== Results Modal ===== */
 
-function showResultsModal(entry: QuizEntry, results: QuizResult[]) {
-  const overlay = document.createElement('div')
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px)'
+function ResultsModal({ entry, results, onClose }: {
+  entry: QuizEntry
+  results: QuizResult[]
+  onClose: () => void
+}) {
+  const [expanded, setExpanded] = useState<number | null>(null)
   const total = entry.questions.length
   const count = results.length
   const avg = Math.round(results.reduce((s, r) => s + (r.percentage || Math.round((r.correct / r.total) * 100)), 0) / count)
 
-  let html = `
-    <div class="results-modal" style="padding:24px">
-      <h2 class="card-title text-center">Results</h2>
-      <p class="text-center" style="font-size:14px;color:var(--text-secondary);margin-bottom:16px">${entry.topic}</p>
-      <div class="score-stats">
-        <div class="score-stat correct">
-          <div class="score-stat-value">${count}</div>
-          <div class="score-stat-label">Submissions</div>
-        </div>
-        <div class="score-stat correct">
-          <div class="score-stat-value">${avg}%</div>
-          <div class="score-stat-label">Average</div>
-        </div>
-      </div>`
+  const toggle = (idx: number) => setExpanded(prev => prev === idx ? null : idx)
 
-  results.forEach((r, idx) => {
-    const pct = r.percentage || Math.round((r.correct / r.total) * 100)
-    const time = new Date(r.submittedAt).toLocaleString()
-    const color = pct >= 70 ? 'var(--success)' : pct >= 40 ? 'var(--warning)' : 'var(--error)'
-    html += `
-      <div class="results-entry">
-        <div class="results-entry-header" onclick="this.nextElementSibling.classList.toggle('hidden');this.querySelector('.results-toggle').textContent=this.nextElementSibling.classList.contains('hidden')?'▶':'▼'">
-          <div><strong style="font-size:14px">Submission #${idx + 1}</strong> <span style="font-size:12px;color:var(--text-muted)">${time}</span></div>
-          <div class="flex-center">
-            <div class="timer-track" style="width:80px"><div class="timer-fill" style="width:${pct}%;background:${color}"></div></div>
-            <span style="font-size:13px;font-weight:700">${r.correct}/${total}</span>
-            <span class="results-toggle" style="font-size:11px;color:var(--accent);margin-left:4px">▶</span>
+  return (
+    <div className="results-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="results-modal">
+        <div className="results-modal-header">
+          <h2 className="card-title">Results</h2>
+          <button className="results-close-btn" onClick={onClose} type="button">×</button>
+        </div>
+
+        <p className="results-topic">{entry.topic}</p>
+
+        <div className="score-stats">
+          <div className="score-stat">
+            <div className="score-stat-value">{count}</div>
+            <div className="score-stat-label">Submissions</div>
+          </div>
+          <div className="score-stat">
+            <div className="score-stat-value">{avg}%</div>
+            <div className="score-stat-label">Average</div>
           </div>
         </div>
-        <div class="results-detail hidden">`
 
-    if (r.answers && entry.questions) {
-      entry.questions.forEach((q, qi) => {
-        const selected = r.answers[qi]
-        const isCorrect = selected === q.answer
-        html += `<div class="results-q"><strong>Q${qi + 1}:</strong> ${q.question}<br>
-          <span>Answered: <span style="font-weight:600;color:${isCorrect ? 'var(--success)' : 'var(--error)'}">${selected || '—'}</span>${!isCorrect ? ` &nbsp;· Correct: <span style="font-weight:600;color:var(--success)">${q.answer}</span>` : ''}</span></div>`
-      })
-    }
+        {results.map((r, idx) => {
+          const pct = r.percentage || Math.round((r.correct / r.total) * 100)
+          const time = new Date(r.submittedAt).toLocaleString()
+          const tier = pct >= 70 ? 'good' : pct >= 40 ? 'fair' : 'poor'
+          const open = expanded === idx
 
-    html += `</div></div>`
-  })
+          return (
+            <div key={idx} className={`results-entry ${open ? 'open' : ''}`}>
+              <div className="results-entry-header" onClick={() => toggle(idx)}>
+                <div className="results-entry-left">
+                  <span className="results-entry-title">Submission #{idx + 1}</span>
+                  <span className="results-entry-time">{time}</span>
+                </div>
+                <div className="results-entry-right">
+                  <div className={`results-track ${tier}`}>
+                    <div className="results-fill" style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="results-score">{r.correct}/{total}</span>
+                  <span className="results-toggle">{open ? '▼' : '▶'}</span>
+                </div>
+              </div>
 
-  html += `</div><button class="btn btn-block btn-secondary" style="margin-top:16px" onclick="this.closest('.fixed')?.remove()">Close</button></div>`
-
-  overlay.innerHTML = html
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove() })
-  document.body.appendChild(overlay)
+              <div className={`results-detail ${open ? '' : 'hidden'}`}>
+                {r.answers && entry.questions.map((q, qi) => {
+                  const selected = r.answers[qi]
+                  const isCorrect = selected === q.answer
+                  return (
+                    <div key={qi} className="results-q">
+                      <div className="results-q-header">
+                        <strong>Q{qi + 1}</strong>
+                        <span className={`results-q-status ${isCorrect ? 'correct' : 'incorrect'}`}>
+                          {isCorrect ? '✓ Correct' : '✗ Incorrect'}
+                        </span>
+                      </div>
+                      <div className="results-q-body">
+                        <p>{q.emoji} {q.question}</p>
+                        <p className="results-q-answer">
+                          Answered: <span className={isCorrect ? 'text-success' : 'text-error'}>{selected || '—'}</span>
+                          {!isCorrect && <span> · Correct: <span className="text-success">{q.answer}</span></span>}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })}
+                {!r.answers && <p className="text-muted">No answer details available.</p>}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 }

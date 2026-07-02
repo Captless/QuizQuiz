@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useAuth } from '../hooks/useAuth'
+import { useScrollReveal } from '../hooks/useScrollReveal'
 import { generateQuiz as apiGenerate, createCheckoutSession, checkPaymentStatus } from '../services/api'
 import type { QuizEntry, QuizQuestion, QuizResult } from '../types'
 import TopicChips from '../components/TopicChips'
@@ -71,11 +72,26 @@ export default function GeneratorPage() {
   const [dark, setDark] = useState(() => localStorage.getItem('quikquiz_dark') === 'true' || (!localStorage.getItem('quikquiz_dark') && window.matchMedia('(prefers-color-scheme: dark)').matches))
   const toastId = useRef(0)
   const [stepper, setStepper] = useState(1)
+  const [faqOpen, setFaqOpen] = useState<Set<number>>(new Set())
+  const toggleFaq = (i: number) => {
+    setFaqOpen(prev => {
+      const next = new Set(prev)
+      if (next.has(i)) next.delete(i)
+      else next.add(i)
+      return next
+    })
+  }
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : '')
     localStorage.setItem('quikquiz_dark', String(dark))
   }, [dark])
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
+
+  useScrollReveal()
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -143,7 +159,10 @@ export default function GeneratorPage() {
         topic: resolvedTopic,
         subject,
         difficulty,
-        questions,
+        questions: questions.map(q => ({
+          ...q,
+          shuffledOptions: [...q.options].sort(() => Math.random() - 0.5),
+        })),
         timerSeconds,
         format: 'form',
         studentFormat: format,
@@ -309,7 +328,7 @@ export default function GeneratorPage() {
       {/* Main */}
       <main className="main-container">
         {/* Hero */}
-        <section className="hero">
+        <section className="hero reveal reveal-card">
           <div className="hero-bg">
             <div className="blob blob-1" />
             <div className="blob blob-2" />
@@ -335,10 +354,12 @@ export default function GeneratorPage() {
           </button>
         </section>
 
+        <div className="hero-divider" />
+
         {/* Value Cards */}
-        <section className="value-cards">
+        <section className="value-cards reveal reveal-card">
           {VALUE_ITEMS.map(v => (
-            <div className="value-card" key={v.title}>
+            <div className="value-card reveal-card" key={v.title}>
               {v.icon}
               <h3>{v.title}</h3>
               <p>{v.desc}</p>
@@ -347,7 +368,7 @@ export default function GeneratorPage() {
         </section>
 
         {/* Stepper / How it Works */}
-        <section className="section-how">
+        <section className="section-how reveal reveal-card">
           <h2 className="section-title">How QuikQuiz Works</h2>
           <div className="stepper-wrapper">
             <div className="stepper">
@@ -364,7 +385,7 @@ export default function GeneratorPage() {
         </section>
 
         {/* Generator Form */}
-        <section id="generatorSection" className={`card ${!paid && user ? 'demo-mode' : ''}`}>
+        <section id="generatorSection" className={`card reveal reveal-card ${!paid && user ? 'demo-mode' : ''}`}>
           <h2 className="card-title">Create Your Quiz</h2>
 
           {!user && (
@@ -408,7 +429,7 @@ export default function GeneratorPage() {
             {/* File Upload */}
             <FileUpload file={file} onChange={f => { setFile(f); if (f) setTopic('') }} disabled={!paid && user !== null} />
 
-            <div className="section-divider"><span className="section-divider-text">Options</span></div>
+            <div className="section-divider"></div>
 
             {/* Difficulty, Num, Format */}
             <div className="form-row-3">
@@ -432,6 +453,7 @@ export default function GeneratorPage() {
             </div>
 
             {/* Question Types */}
+            <div className="section-divider"></div>
             <div className="form-group">
               <label>Question Type</label>
               <div className="checkbox-group">
@@ -442,6 +464,7 @@ export default function GeneratorPage() {
                 ].map(t => (
                   <label key={t.key} className="checkbox-label">
                     <input type="checkbox" checked={types[t.key]} onChange={e => setTypes(prev => ({ ...prev, [t.key]: e.target.checked }))} />
+                    <span className="custom-checkbox" />
                     {t.label}
                   </label>
                 ))}
@@ -452,7 +475,7 @@ export default function GeneratorPage() {
             <TimerInput enabled={timerEnabled} seconds={timerSeconds} onToggle={setTimerEnabled} onChange={setTimerSeconds} />
 
             {/* Generate Button */}
-            <button onClick={handleGenerate} disabled={generating}
+            <button onClick={handleGenerate} disabled={generating || !user || (!paid && usageCount > 0)}
               className={`btn btn-block ${generating ? 'btn-secondary' : !user ? 'btn-primary' : paid ? 'btn-primary' : isDemo ? 'btn-primary' : 'btn-warning'}`}>
               {generating ? genProgress || 'Generating...' : genBtnText}
             </button>
@@ -474,20 +497,6 @@ export default function GeneratorPage() {
           </div>
         </section>
 
-        {/* Spinner */}
-        {generating && (
-          <div className="spinner active">
-            <div className="spinner-bars">
-              <div className="spinner-bar" />
-              <div className="spinner-bar" />
-              <div className="spinner-bar" />
-              <div className="spinner-bar" />
-              <div className="spinner-bar" />
-            </div>
-            <p className="spinner-text">{genProgress}</p>
-          </div>
-        )}
-
         {/* Quiz Stack */}
         {entries.length > 0 && (
           <QuizStack
@@ -501,14 +510,12 @@ export default function GeneratorPage() {
         )}
 
         {/* FAQ */}
-        <section className="section-faq">
+        <section className="section-faq reveal reveal-card">
           <h2 className="section-title" style={{ marginBottom: 'var(--spacing-xl)' }}>FAQs</h2>
           {FAQS.map((faq, i) => (
-            <div key={i} className="faq-item">
-              <details>
-                <summary>{faq.q}</summary>
-                <div>{faq.a}</div>
-              </details>
+            <div key={i} className={`faq-item reveal-card ${faqOpen.has(i) ? 'open' : ''}`}>
+              <div className="faq-header" onClick={() => toggleFaq(i)}>{faq.q}</div>
+              <div className="faq-body"><p>{faq.a}</p></div>
             </div>
           ))}
         </section>

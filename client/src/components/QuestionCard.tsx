@@ -13,7 +13,7 @@ const typeLabels: Record<string, string> = {
 }
 
 export default function QuestionCard({ question, index, showAnswer }: Props) {
-  const shuffled = [...question.options].sort(() => Math.random() - 0.5)
+  const shuffled = question.shuffledOptions ?? [...question.options].sort(() => Math.random() - 0.5)
 
   const tagClass = question.type === 'truefalse' ? 'tag-truefalse' : question.type === 'dropdown' ? 'tag-dropdown' : 'tag-multiple'
 

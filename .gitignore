@@ -1,6 +1,9 @@
 node_modules/
+client/node_modules/
 .env
 uploads/
 backups/
 client/dist/
 server/__pycache__/
+*.log
+*.err
