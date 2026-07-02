@@ -51,14 +51,11 @@
 
       document.getElementById('studentSubjectBadge').textContent = quizData.subject || '';
       document.getElementById('studentQuizTitle').textContent = quizData.title || quizData.topic || 'Untitled Quiz';
-      document.getElementById('startTitle').textContent = quizData.title || quizData.topic || 'Untitled Quiz';
+      document.getElementById('studentTopic').textContent = quizData.topic || '';
       document.getElementById('startQCount').textContent = quizData.questions.length;
       if (quizData.subject) {
         document.getElementById('startSubject').textContent = quizData.subject;
         document.getElementById('startSubjectMeta').classList.remove('hidden');
-      }
-      if (quizData.topic) {
-        document.getElementById('startDesc').textContent = 'Topic: ' + quizData.topic;
       }
 
       var timerSec = parseInt(quizData.timerSeconds) || parseInt(quizData.timerMinutes) * 60 || 0;
@@ -321,8 +318,6 @@
     var ub = document.getElementById('unansweredBox');
     if (ub) ub.remove();
 
-    document.getElementById('studentSubmitBtn').classList.add('hidden');
-
     if (quizData.format === 'slide') {
       document.getElementById('slideNav').classList.add('hidden');
     }
@@ -335,8 +330,7 @@
     });
 
     var submitBtn = document.getElementById('studentSubmitBtn');
-    var origText = submitBtn.textContent;
-    submitBtn.textContent = 'Submitting...';
+    submitBtn.innerHTML = '<span class="spinner-bars"><span class="spinner-bar"></span><span class="spinner-bar"></span><span class="spinner-bar"></span><span class="spinner-bar"></span><span class="spinner-bar"></span></span>';
     submitBtn.disabled = true;
 
     fetch('/api/quiz/' + quizId + '/submit', {
@@ -346,7 +340,8 @@
     }).catch(function () {});
 
     setTimeout(function () {
-      submitBtn.classList.add('hidden');
+      var wrap = document.querySelector('.student-submit-wrap');
+      if (wrap) wrap.classList.add('hidden');
       document.getElementById('studentQuizContainer').classList.add('hidden');
       if (quizData.showScore !== false) {
         showScore(correct, total);

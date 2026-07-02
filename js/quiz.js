@@ -661,7 +661,7 @@ function showResultsModal(entry) {
   const modal = document.createElement('div');
   modal.className = 'paywall-modal results-modal';
 
-  modal.innerHTML = '<h2 class="card-title text-center" style="margin-bottom:4px;">📊 Results</h2>' +
+  modal.innerHTML = '<h2 class="card-title text-center" style="margin-bottom:4px;">Results</h2>' +
     '<p style="text-align:center;color:var(--text-secondary);font-size:14px;margin-bottom:20px;">' + entry.topic + '</p>' +
     '<div id="resultsContent" style="text-align:center;padding:24px 0;color:var(--text-muted);">Loading...</div>' +
     '<button id="resultsCloseBtn" class="btn btn-secondary btn-block mt-4">Close</button>';

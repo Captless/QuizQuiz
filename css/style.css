@@ -77,8 +77,16 @@ body {
   min-height: 100vh;
   font-size: 15px;
   line-height: 1.6;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+  display: flex;
+  flex-direction: column;
   transition: background var(--transition), color var(--transition);
 }
+main { flex: 1; }
+body::-webkit-scrollbar { width: 6px; }
+body::-webkit-scrollbar-track { background: transparent; }
+body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 a { color: var(--accent); text-decoration: none; }
 
 /* ===== Header ===== */
@@ -898,7 +906,10 @@ header {
 }
 
 /* ===== Results Modal ===== */
-.results-modal { max-width: 520px; max-height: 80vh; overflow-y: auto; text-align: left; }
+.results-modal { max-width: 520px; max-height: 80vh; overflow-y: auto; text-align: left; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.results-modal::-webkit-scrollbar { width: 6px; }
+.results-modal::-webkit-scrollbar-track { background: transparent; }
+.results-modal::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 .results-entry { margin-bottom: 10px; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
 .results-entry-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; cursor: pointer; user-select: none; transition: background var(--transition); flex-wrap: wrap; gap: 6px; }
 .results-entry-header:hover { background: var(--bg-hover); }

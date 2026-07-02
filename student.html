@@ -36,6 +36,7 @@
 </style>
 </head>
 <body>
+  <main>
   <header>
     <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
       <a href="/" class="text-2xl font-extrabold tracking-tight" style="color:var(--accent);">
@@ -52,6 +53,7 @@
     <div style="max-width:640px;margin:0 auto 24px;text-align:center;">
       <div class="quiz-subject-badge" id="studentSubjectBadge"></div>
       <h1 class="quiz-title-static" id="studentQuizTitle"></h1>
+      <p id="studentTopic" class="quiz-subject-badge" style="margin-top:6px;"></p>
     </div>
 
     <div id="studentLoading" class="student-loading">Loading quiz questions...</div>
@@ -63,8 +65,6 @@
     <!-- Start Screen -->
     <div id="startScreen" class="card hidden">
       <div class="start-screen">
-        <h2 id="startTitle">Ready to start?</h2>
-        <p id="startDesc" style="color:var(--text-secondary);font-size:14px;">You'll answer a series of questions based on the topic.</p>
         <div class="start-meta">
           <span>Questions: <strong id="startQCount">0</strong></span>
           <span id="startTimerMeta">Time limit: <strong id="startTimeLimit">—</strong></span>
@@ -90,12 +90,17 @@
           <button class="slide-nav-btn" id="slideNextBtn">▶</button>
         </div>
       </div>
-      <div class="student-submit-wrap">
+      <div class="student-submit-wrap mb-8">
         <button id="studentSubmitBtn" class="btn btn-warning btn-block">Submit Answers</button>
       </div>
       <div id="studentScoreArea" class="student-score hidden"></div>
     </div>
   </div>
+  </main>
+
+  <footer class="text-center py-8 text-sm" style="border-top:1px solid var(--border);color:var(--text-muted);">
+    <div class="max-w-4xl mx-auto px-4">QuikQuiz &mdash; AI-powered quiz generation for teachers and tutors.</div>
+  </footer>
 
   <script src="/js/student.js"></script>
 </body>
