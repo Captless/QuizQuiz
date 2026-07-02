@@ -366,7 +366,7 @@
 
     var title = document.createElement('p');
     title.style.cssText = 'font-weight:700;font-size:15px;color:var(--error);margin-bottom:12px;';
-    title.textContent = '⚠️ Unanswered Questions';
+    title.textContent = 'Unanswered Questions';
     box.appendChild(title);
 
     var badges = document.createElement('div');
@@ -374,7 +374,7 @@
 
     unanswered.forEach(function (qi) {
       var badge = document.createElement('span');
-      badge.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--error);color:#fff;font-weight:700;font-size:14px;cursor:pointer;transition:transform 0.15s;';
+      badge.className = 'unanswered-badge';
       badge.textContent = qi + 1;
       badge.addEventListener('click', function () {
         if (quizData.format === 'slide' && slideNavigator) {
@@ -386,8 +386,6 @@
         var b = document.getElementById('unansweredBox');
         if (b) b.remove();
       });
-      badge.addEventListener('mouseenter', function () { badge.style.transform = 'scale(1.15)'; });
-      badge.addEventListener('mouseleave', function () { badge.style.transform = ''; });
       badges.appendChild(badge);
     });
 
@@ -422,12 +420,12 @@
     const area = document.getElementById('studentScoreArea');
     const pct = total ? Math.round((correct / total) * 100) : 0;
 
-    let tier, emoji, message;
-    if (pct === 100) { tier = 'perfect'; emoji = '🏆'; message = 'Perfect score!'; }
-    else if (pct >= 80) { tier = 'great'; emoji = '⭐'; message = 'Great job!'; }
-    else if (pct >= 60) { tier = 'good'; emoji = '👍'; message = 'Good try!'; }
-    else if (pct >= 40) { tier = 'fair'; emoji = '💪'; message = 'Keep practicing!'; }
-    else { tier = 'keep'; emoji = '🌱'; message = "You'll get it next time!"; }
+    let tier, message;
+    if (pct === 100) { tier = 'perfect'; message = 'Perfect score!'; }
+    else if (pct >= 80) { tier = 'great'; message = 'Great job!'; }
+    else if (pct >= 60) { tier = 'good'; message = 'Good try!'; }
+    else if (pct >= 40) { tier = 'fair'; message = 'Keep practicing!'; }
+    else { tier = 'keep'; message = "You'll get it next time!"; }
 
     var passed = pct >= 60;
     area.innerHTML = '' +

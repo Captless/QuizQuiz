@@ -11,11 +11,6 @@
 <style>
   body { padding: 0; }
   .student-container { max-width: 640px; margin: 0 auto; }
-  .option-item { cursor: pointer; }
-  .option-item.selected { border-color: var(--accent); background: var(--accent-light); }
-  .option-item.correct { background: var(--bg-success); border-color: var(--success); color: var(--success); }
-  .option-item.incorrect { background: var(--bg-error); border-color: var(--error); }
-  .answer-reveal.visible { display: block; }
   .student-loading { text-align: center; padding: 60px 0; color: var(--text-secondary); font-size: 16px; }
   .student-error { text-align: center; padding: 60px 0; color: var(--error); }
   .student-error h2 { font-size: 22px; margin-bottom: 8px; }
@@ -24,19 +19,14 @@
   .student-score .score-circle { width: 100px; height: 100px; font-size: 28px; }
   #studentQuizContainer.hidden { display: none; }
   #studentSubmitBtn.hidden { display: none; }
-  .start-screen { text-align: center; padding: 48px 24px; }
+  .start-screen { text-align: center; padding: 24px 0; }
   .start-screen h2 { font-size: 24px; font-weight: 700; margin-bottom: 8px; color: var(--text-primary); }
   .start-screen p { color: var(--text-secondary); margin-bottom: 6px; font-size: 14px; }
   .start-screen .start-meta { margin: 20px 0 28px; display: flex; justify-content: center; gap: 24px; }
   .start-screen .start-meta span { font-size: 13px; color: var(--text-muted); }
   .start-screen .start-meta strong { color: var(--text-primary); }
   #slideNav.hidden { display: none; }
-  .pass-badge { font-size: 18px; font-weight: 700; margin: 12px 0; padding: 8px 16px; border-radius: var(--radius-md); display: inline-block; }
-  .pass-badge.passed { background: var(--bg-success); color: var(--success); }
-  .pass-badge.failed { background: var(--bg-error); color: var(--error); }
   #unansweredBox { animation: fadeIn 0.2s ease; }
-  .unanswered-badge { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: var(--error); color: #fff; font-weight: 700; font-size: 14px; cursor: pointer; transition: transform 0.15s; }
-  .unanswered-badge:hover { transform: scale(1.15); }
   .slide-enter { animation: slideIn 0.25s ease; }
   @keyframes slideIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
   .quiz-subject-badge { display:inline-block; color:var(--text-muted); font-size:13px; font-weight:500; letter-spacing:0.04em; text-transform:capitalize; }
@@ -86,7 +76,6 @@
 
     <!-- Timer Bar -->
     <div class="timer-bar" id="studentTimerBar">
-      <span class="timer-icon">⏱</span>
       <span class="timer-display" id="studentTimerDisplay">00:00</span>
       <div class="timer-track"><div class="timer-fill" id="studentTimerFill" style="width:100%"></div></div>
     </div>

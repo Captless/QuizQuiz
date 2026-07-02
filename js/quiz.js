@@ -263,7 +263,7 @@ function createQuizStackEntry(questions, topic, difficulty, timerSeconds, format
   scoreToggle.className = 'btn btn-sm btn-outline entry-score-toggle';
   scoreToggle.title = 'Toggle score visibility for students';
   scoreToggle.textContent = '✗ Score';
-  scoreToggle.dataset.on = 'true';
+  scoreToggle.dataset.on = 'false';
   scoreToggle.addEventListener('click', (e) => {
     e.stopPropagation();
     entry.showScore = !entry.showScore;

@@ -378,6 +378,16 @@ header {
 .pdf-actions { display: none; }
 .pdf-actions.active { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
 
+/* ===== Unanswered Badge (Student) ===== */
+.unanswered-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--error); color: #fff;
+  font-weight: 700; font-size: 14px;
+  cursor: pointer; transition: transform 0.15s;
+}
+.unanswered-badge:hover { transform: scale(1.15); }
+
 /* ===== Toast ===== */
 .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
 .toast { padding: 12px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 500; box-shadow: var(--shadow-lg); pointer-events: auto; animation: slideInRight 0.3s ease; max-width: 400px; display: flex; align-items: center; gap: 10px; }
@@ -389,9 +399,8 @@ header {
 @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
 
 /* ===== Timer ===== */
-.timer-bar { display: none; align-items: center; gap: 10px; padding: 10px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 16px; }
+.timer-bar { display: none; align-items: center; gap: 12px; padding: 10px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 16px; }
 .timer-bar.active { display: flex; animation: fadeIn 0.2s ease; }
-.timer-icon { font-size: 18px; }
 .timer-display { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-primary); min-width: 60px; }
 .timer-display.warning { color: var(--warning); }
 .timer-display.danger { color: var(--error); animation: pulse 1s infinite; }
