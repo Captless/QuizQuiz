@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/css/design-tokens.css">
 <link rel="stylesheet" href="/css/style.css">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://js.stripe.com/v3/"></script>
@@ -36,7 +37,7 @@
   </div>
 </header>
 
-<main class="max-w-4xl mx-auto px-4">
+<main class="main-container">
 
   <!-- Hero -->
   <section class="hero" id="heroSection">
@@ -54,7 +55,11 @@
       Generate a <span class="gradient-text">Quiz</span> in Seconds
     </h1>
     <p class="hero-subtitle">
-      Create classroom-ready quizzes with AI. Trusted by teachers worldwide.
+      QuikQuiz lets teachers generate AI‑assisted multiple‑choice, true/false, and dropdown quizzes in seconds.
+      Pick a subject, set a difficulty level, and let the system create balanced questions for you.
+    </p>
+    <p class="hero-subdetail">
+      Import PDFs or PPTX files, enable a timer for each quiz, and export results as a PDF.
     </p>
     <button class="btn btn-primary btn-lg hero-cta" id="heroCtaBtn">Generate Your First Quiz</button>
   </section>
@@ -65,6 +70,82 @@
     <span class="trusted-icon">✦</span>
     <span class="trusted-line"></span>
   </div>
+
+  <!-- How It Works -->
+  <section class="section-how" id="howSection" role="region" aria-labelledby="howTitle">
+    <h2 class="section-title" id="howTitle">How QuikQuiz Works</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+      <div class="how-step">
+        <h3 class="step-title">1️⃣ Choose a subject &amp; difficulty</h3>
+        <p>Select a topic (Math, History, Science, etc.) and the level of challenge you need.</p>
+      </div>
+      <div class="how-step">
+        <h3 class="step-title">2️⃣ Generate the quiz</h3>
+        <p>Click "Generate". The AI composes a set of balanced questions instantly.</p>
+      </div>
+      <div class="how-step">
+        <h3 class="step-title">3️⃣ Share &amp; track results</h3>
+        <p>Students take the quiz, you view live scores, and you can download a PDF report.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why QuikQuiz -->
+  <section class="section-why" id="whySection" role="region" aria-labelledby="whyTitle">
+    <h2 class="section-title" id="whyTitle">Why Choose QuikQuiz?</h2>
+    <ul class="list-disc pl-6 space-y-3">
+      <li>Instant AI‑generated quizzes, no manual authoring.</li>
+      <li>Secure login with Google OAuth; no answer data is stored.</li>
+      <li>Import existing PDFs or PowerPoint slides to reuse content.</li>
+      <li>Free tier includes one quiz; unlimited access for $9 / month.</li>
+      <li>Simple, responsive UI with dark‑mode support.</li>
+    </ul>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section-faq" id="faqSection" role="region" aria-labelledby="faqTitle">
+    <h2 class="section-title" id="faqTitle">Frequently Asked Questions</h2>
+
+    <div class="faq-item">
+      <input type="checkbox" id="faq1" class="faq-input" />
+      <label class="faq-label" for="faq1">Do I need an OpenAI API key?</label>
+      <div class="faq-content">
+        <p>No. The service runs the model on the backend; you only need a Google sign‑in.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <input type="checkbox" id="faq2" class="faq-input" />
+      <label class="faq-label" for="faq2">Can I use my own PDFs?</label>
+      <div class="faq-content">
+        <p>Yes. Upload a PDF or PPTX and the system will extract relevant text for the quiz.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <input type="checkbox" id="faq3" class="faq-input" />
+      <label class="faq-label" for="faq3">Is student data stored?</label>
+      <div class="faq-content">
+        <p>No. Student answers are processed in‑memory only for scoring; nothing is saved.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <input type="checkbox" id="faq4" class="faq-input" />
+      <label class="faq-label" for="faq4">What browsers are supported?</label>
+      <div class="faq-content">
+        <p>The app works on any modern desktop or mobile browser that supports ES6 and CSS blur.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <input type="checkbox" id="faq5" class="faq-input" />
+      <label class="faq-label" for="faq5">How can I cancel my subscription?</label>
+      <div class="faq-content">
+        <p>Cancel anytime via the Stripe portal linked in your account settings.</p>
+      </div>
+    </div>
+  </section>
 
   <!-- Demo Showcase -->
   <section class="demo-showcase" id="demoQuizSection">
@@ -255,8 +336,6 @@
     </div>
   </section>
 
-
-
 </main>
 
 <!-- Paywall Modal -->
@@ -279,7 +358,14 @@
 </div>
 
 <footer class="text-center py-8 text-sm mt-12" style="border-top:1px solid var(--border);color:var(--text-muted);">
-  <div class="max-w-4xl mx-auto px-4">QuikQuiz &mdash; AI-powered quiz generation for teachers and tutors.</div>
+  <div class="main-container">
+    <div class="flex justify-center gap-6 mb-4">
+      <a href="/privacy" class="footer-link">Privacy</a>
+      <a href="/terms" class="footer-link">Terms</a>
+      <a href="/contact" class="footer-link">Contact</a>
+    </div>
+    <div>QuikQuiz &mdash; AI‑powered quiz generation for teachers and tutors.</div>
+  </div>
 </footer>
 
 <!-- Scripts -->

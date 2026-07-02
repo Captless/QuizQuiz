@@ -1,0 +1,100 @@
+/* ===== Design Tokens ===== */
+:root {
+  /* Colors */
+  --color-primary:   #93C5FD;
+  --color-secondary: #3B82F6;
+  --color-tertiary:  #B29BFF;
+  --color-neutral:   #FFFFFF;
+  --color-background:#FFFFFF;
+  --color-surface:   #93C5FD;
+  --color-text-primary:   #FFFFFF;
+  --color-text-secondary: #FFFFFF;
+  --color-border:    #FFFFFF;
+  --color-accent:    #93C5FD;
+
+  /* Derived shades (improvising within palette) */
+  --color-primary-hover: #60A5FA;
+  --color-primary-light: rgba(147,197,253,0.15);
+  --color-accent-hover:  #60A5FA;
+  --color-bg-body:   #0a2342;
+  --color-bg-card:   rgba(255,255,255,0.08);
+  --color-bg-hover:  rgba(255,255,255,0.12);
+  --color-bg-input:  rgba(255,255,255,0.06);
+  --color-bg-chip:   rgba(147,197,253,0.12);
+  --color-bg-success:rgba(34,197,94,0.15);
+  --color-bg-error:  rgba(239,68,68,0.15);
+  --color-bg-warning:rgba(234,179,8,0.15);
+  --color-bg-skeleton:rgba(255,255,255,0.06);
+  --color-success:   #22C55E;
+  --color-error:     #EF4444;
+  --color-warning:   #EAB308;
+  --color-text-muted:rgba(255,255,255,0.45);
+  --color-text-on-accent: #FFFFFF;
+
+  /* Typography */
+  --font-headline-lg: 'Inter', sans-serif;
+  --size-headline-lg: 36px;
+  --weight-headline-lg: 500;
+  --lh-headline-lg: 40px;
+  --ls-headline-lg: -0.025em;
+
+  --font-body-md: 'Inter', sans-serif;
+  --size-body-md: 14px;
+  --weight-body-md: 400;
+  --lh-body-md: 20px;
+
+  --font-mono: 'Inter', sans-serif;
+
+  /* Radii */
+  --radius-sm: 12px;
+  --radius-md: 12px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+
+  /* Spacing — base rhythm = 6px */
+  --spacing-base: 6px;
+  --spacing-sm:   calc(var(--spacing-base) * 1);
+  --spacing-md:   calc(var(--spacing-base) * 2);
+  --spacing-lg:   calc(var(--spacing-base) * 4);
+  --spacing-xl:   calc(var(--spacing-base) * 6);
+  --gap:          calc(var(--spacing-base) * 2);
+  --card-padding:calc(var(--spacing-base) * 4);
+  --section-padding: calc(var(--spacing-base) * 6);
+
+  /* Elevation — glass surface */
+  --surface-bg: rgba(255,255,255,0.08);
+  --surface-blur: 12px;
+  --border-width: 0.63px;
+
+  /* Shadows */
+  --shadow-sm: rgba(255,255,255,0.05) 0 4px 12px 0;
+  --shadow-md: rgba(255,255,255,0.02) 0 2px 10px 0;
+  --shadow-lg: rgba(147,197,253,0.8) 0 0 8px 0;
+
+  /* Transitions */
+  --transition: 0.15s ease;
+}
+
+/* ===== Glass Surface Utility ===== */
+.glass-surface {
+  background: var(--surface-bg);
+  backdrop-filter: blur(var(--surface-blur));
+  -webkit-backdrop-filter: blur(var(--surface-blur));
+  border: var(--border-width) solid var(--color-border);
+  box-shadow: var(--shadow-sm), var(--shadow-lg);
+}
+
+/* ===== Typography Utilities ===== */
+.headline-lg {
+  font-family: var(--font-headline-lg);
+  font-size: var(--size-headline-lg);
+  font-weight: var(--weight-headline-lg);
+  line-height: var(--lh-headline-lg);
+  letter-spacing: var(--ls-headline-lg);
+}
+.body-md {
+  font-family: var(--font-body-md);
+  font-size: var(--size-body-md);
+  font-weight: var(--weight-body-md);
+  line-height: var(--lh-body-md);
+}
