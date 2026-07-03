@@ -89,3 +89,20 @@ export async function incrementUsage(): Promise<number> {
   if (!res.ok) throw new Error(data.error || 'Failed to increment usage')
   return data.usageCount
 }
+
+export async function saveQuiz(data: Record<string, unknown>): Promise<string> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', ...await authHeaders() }
+  const res = await fetch('/api/quiz/save', { method: 'POST', headers, body: JSON.stringify(data) })
+  const response = await res.json()
+  if (!res.ok) throw new Error(response.error || 'Failed to save quiz')
+  return response.id
+}
+
+export async function updateQuiz(id: string, data: Record<string, unknown>): Promise<void> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', ...await authHeaders() }
+  const res = await fetch(`/api/quiz/${id}`, { method: 'PUT', headers, body: JSON.stringify(data) })
+  if (!res.ok) {
+    const response = await res.json()
+    throw new Error(response.error || 'Failed to update quiz')
+  }
+}

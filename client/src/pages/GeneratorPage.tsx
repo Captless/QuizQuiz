@@ -1,13 +1,15 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useScrollReveal } from '../hooks/useScrollReveal'
-import { generateQuiz as apiGenerate, createCheckoutSession, checkPaymentStatus } from '../services/api'
+import { generateQuiz as apiGenerate, createCheckoutSession, checkPaymentStatus, saveQuiz as apiSaveQuiz, updateQuiz as apiUpdateQuiz } from '../services/api'
 import type { QuizEntry, QuizQuestion, QuizResult } from '../types'
 import TopicChips from '../components/TopicChips'
 import FileUpload from '../components/FileUpload'
 import TimerInput from '../components/TimerInput'
-import QuizStack from '../components/QuizStack'
-import PaywallModal from '../components/PaywallModal'
+import Spinner from '../components/Spinner'
+
+const QuizStack = lazy(() => import('../components/QuizStack'))
+const PaywallModal = lazy(() => import('../components/PaywallModal'))
 
 const VALUE_ITEMS = [
   {
@@ -185,24 +187,13 @@ export default function GeneratorPage() {
     try {
       let id = entry.shareId
       if (id) {
-        await fetch(`/api/quiz/${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ showScore: entry.showScore, timerSeconds: entry.timerSeconds, format: entry.studentFormat, title: entry.title, subject: entry.subject })
-        })
+        await apiUpdateQuiz(id, { showScore: entry.showScore, timerSeconds: entry.timerSeconds, format: entry.studentFormat, title: entry.title, subject: entry.subject })
       } else {
-        const res = await fetch('/api/quiz/save', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ questions: entry.questions, topic: entry.topic, difficulty: entry.difficulty, showScore: entry.showScore, timerSeconds: entry.timerSeconds, format: entry.studentFormat, title: entry.title, subject: entry.subject })
-        })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error || 'Failed to save')
-        id = data.id
+        id = await apiSaveQuiz({ questions: entry.questions, topic: entry.topic, difficulty: entry.difficulty, showScore: entry.showScore, timerSeconds: entry.timerSeconds, format: entry.studentFormat, title: entry.title, subject: entry.subject })
         setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, shareId: id } : e))
       }
       if (id) {
-        navigator.clipboard.writeText(`${window.location.origin}/quiz/${id}`)
+        await navigator.clipboard.writeText(`${window.location.origin}/quiz/${id}`)
         addToast('Link copied to clipboard!', 'success')
       }
     } catch (err: any) {
@@ -302,7 +293,7 @@ export default function GeneratorPage() {
             <span className="gradient-text">QuikQuiz</span>
           </a>
           <div className="flex-center" style={{ gap: '12px' }}>
-<button onClick={() => setDark(!dark)} className="dark-toggle">
+<button onClick={() => setDark(!dark)} className="dark-toggle" aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}>
                 {dark ? '☀' : '☾'}
               </button>
             {user && !paid && (
@@ -489,16 +480,18 @@ export default function GeneratorPage() {
         </section>
 
         {/* Quiz Stack */}
-        {entries.length > 0 && (
-          <QuizStack
-            entries={entries}
-            onDelete={id => setEntries(prev => prev.filter(e => e.id !== id))}
-            onUpdate={(id, updates) => setEntries(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e))}
-            onShare={handleShare}
-            onResults={handleResults}
-            onExportPDF={handleExportPDF}
-          />
-        )}
+        <Suspense fallback={<Spinner text="Loading quizzes..." />}>
+          {entries.length > 0 && (
+            <QuizStack
+              entries={entries}
+              onDelete={id => setEntries(prev => prev.filter(e => e.id !== id))}
+              onUpdate={(id, updates) => setEntries(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e))}
+              onShare={handleShare}
+              onResults={handleResults}
+              onExportPDF={handleExportPDF}
+            />
+          )}
+        </Suspense>
 
         {/* FAQ */}
         <section className="section-faq reveal reveal-card">
@@ -520,7 +513,9 @@ export default function GeneratorPage() {
       </footer>
 
       {/* Paywall Modal */}
-      <PaywallModal open={showPaywall} onClose={() => setShowPaywall(false)} onDevSubscribe={handleSubscribe} />
+      <Suspense fallback={null}>
+        <PaywallModal open={showPaywall} onClose={() => setShowPaywall(false)} onDevSubscribe={handleSubscribe} />
+      </Suspense>
     </>
   )
 }

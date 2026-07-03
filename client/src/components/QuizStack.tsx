@@ -103,13 +103,13 @@ function QuizEntryCard({ entry, expanded, onToggle, onDelete, onUpdate, onShare,
           </div>
         </div>
         <div className="quiz-entry-actions">
-          <button className="btn btn-sm btn-outline entry-delete-btn" type="button" title="Delete quiz" onClick={e => { e.stopPropagation(); if (confirm('Delete this quiz?')) onDelete() }}>Delete</button>
-          <button className="btn btn-sm btn-outline action-btn" type="button" title="Export PDF" onClick={e => { e.stopPropagation(); onExportPDF() }}>PDF</button>
-          <button className={`btn btn-sm entry-score-toggle action-btn`} type="button" title={entry.showScore ? 'Hide scores' : 'Show scores'} data-on={entry.showScore ? 'true' : 'false'} onClick={e => { e.stopPropagation(); onUpdate({ showScore: !entry.showScore }) }}>
+          <button className="btn btn-sm btn-outline entry-delete-btn" type="button" title="Delete quiz" aria-label={`Delete ${entry.title}`} onClick={e => { e.stopPropagation(); if (confirm('Delete this quiz?')) onDelete() }}>Delete</button>
+          <button className="btn btn-sm btn-outline action-btn" type="button" title="Export PDF" aria-label={`Export ${entry.title} as PDF`} onClick={e => { e.stopPropagation(); onExportPDF() }}>PDF</button>
+          <button className={`btn btn-sm entry-score-toggle action-btn`} type="button" title={entry.showScore ? 'Hide scores' : 'Show scores'} aria-label={entry.showScore ? 'Hide scores from students' : 'Show scores to students'} data-on={entry.showScore ? 'true' : 'false'} onClick={e => { e.stopPropagation(); onUpdate({ showScore: !entry.showScore }) }}>
             <span className="score-icon">{entry.showScore ? '✓' : '✗'}</span> Score
           </button>
-          <button className="btn btn-sm btn-outline action-btn" type="button" title="View results" onClick={e => { e.stopPropagation(); onResults() }}>Results</button>
-          <button className="btn btn-sm btn-outline action-btn" type="button" title="Share quiz" onClick={e => { e.stopPropagation(); onShare() }}>Share</button>
+          <button className="btn btn-sm btn-outline action-btn" type="button" title="View results" aria-label={`View results for ${entry.title}`} onClick={e => { e.stopPropagation(); onResults() }}>Results</button>
+          <button className="btn btn-sm btn-outline action-btn" type="button" title="Share quiz" aria-label={`Share ${entry.title}`} onClick={e => { e.stopPropagation(); onShare() }}>Share</button>
           <span className="entry-toggle" onClick={e => { e.stopPropagation(); onToggle() }} title={expanded ? 'Collapse' : 'Expand'}>{expanded ? '▼' : '▶'}</span>
         </div>
       </div>

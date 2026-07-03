@@ -6,9 +6,12 @@ const path = require('path');
 const crypto = require('crypto');
 const fs = require('fs');
 const multer = require('multer');
-const JSZip = require('jszip');
 const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
 const { jsonrepair } = require('jsonrepair');
+const { extractTextFromPDF } = require('./utils/pdf');
+const { extractTextFromPPTX } = require('./utils/pptx');
+const { validateGenerateBody, validateQuizSaveBody } = require('./utils/validate');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const app = express();
@@ -29,6 +32,10 @@ const sharedResults = new Map();
 const corsOrigin = process.env.CORS_ORIGIN || true;
 app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(express.json());
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
 
 /* ===== Rate Limiting ===== */
 const apiLimiter = rateLimit({
@@ -349,12 +356,8 @@ async function callGroq(prompt, retries = 2) {
 }
 
 /* ===== Generate quiz (OpenRouter proxy with fallbacks) ===== */
-app.post('/api/generate', async (req, res) => {
+app.post('/api/generate', validateGenerateBody, async (req, res) => {
   const { topic, difficulty, type, num } = req.body;
-
-  if (!topic || !difficulty || !type || !num) {
-    return res.status(400).json({ error: 'Missing required fields: topic, difficulty, type, num' });
-  }
 
   if (!process.env.OPENROUTER_KEY && !process.env.GROQ_KEY) {
     return res.status(500).json({ error: 'No AI API key configured on server' });
@@ -397,14 +400,12 @@ app.post('/api/generate-from-file', (req, res, next) => {
     if (err) return res.status(400).json({ error: 'Upload error: ' + err.message });
     next();
   });
-}, async (req, res) => {
+}, validateGenerateBody, async (req, res) => {
   const { topic, difficulty, type, num } = req.body;
   const file = req.file;
 
-  if (!file) return res.status(400).json({ error: 'No file uploaded' });
-  if (!difficulty || !type || !num) {
-    fs.unlinkSync(file.path);
-    return res.status(400).json({ error: 'Missing required fields' });
+  if (!file) {
+    return res.status(400).json({ error: 'No file uploaded' });
   }
   if (!process.env.OPENROUTER_KEY && !process.env.GROQ_KEY) {
     fs.unlinkSync(file.path);
@@ -425,7 +426,7 @@ app.post('/api/generate-from-file', (req, res, next) => {
       : await extractTextFromPPTX(buffer);
   } catch (err) {
     fs.unlinkSync(file.path);
-    return res.status(500).json({ error: 'Failed to extract text from file: ' + err.message });
+    return res.status(400).json({ error: 'Failed to extract text from file: ' + err.message });
   }
 
   fs.unlinkSync(file.path);
@@ -594,11 +595,8 @@ app.get('/api/quiz/demo', (req, res) => {
 });
 
 /* ===== Save a quiz for sharing ===== */
-app.post('/api/quiz/save', async (req, res) => {
+app.post('/api/quiz/save', requireUser, validateQuizSaveBody, async (req, res) => {
   const { questions, topic, difficulty, showScore, format, title, subject } = req.body;
-  if (!questions || !Array.isArray(questions) || questions.length === 0) {
-    return res.status(400).json({ error: 'Invalid quiz data' });
-  }
   const id = crypto.randomBytes(6).toString('hex');
   const data = {
     questions,
@@ -622,7 +620,7 @@ app.get('/api/quiz/:id', async (req, res) => {
 });
 
 /* ===== Update a shared quiz ===== */
-app.put('/api/quiz/:id', async (req, res) => {
+app.put('/api/quiz/:id', requireUser, async (req, res) => {
   const quiz = await getQuiz(req.params.id);
   if (!quiz) return res.status(404).json({ error: 'Quiz not found.' });
   const updates = {};
@@ -656,7 +654,7 @@ app.post('/api/quiz/:id/submit', async (req, res) => {
 });
 
 /* ===== Get quiz results (teacher) ===== */
-app.get('/api/quiz/:id/results', async (req, res) => {
+app.get('/api/quiz/:id/results', requireUser, async (req, res) => {
   const results = await getResults(req.params.id);
   const quiz = await getQuiz(req.params.id);
   res.json({ results, totalQuestions: quiz?.questions?.length || 0 });

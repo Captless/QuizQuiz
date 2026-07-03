@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
 import type { SharedQuiz, QuizQuestion } from '../types'
+import Spinner from '../components/Spinner'
 
 export default function StudentPage() {
   const { id } = useParams<{ id: string }>()
@@ -110,7 +111,7 @@ export default function StudentPage() {
     doSubmit(false, answersRef.current)
   }
 
-  if (loading) return <div className="flex-center" style={{ minHeight: '100vh' }}>Loading quiz questions...</div>
+  if (loading) return <div className="flex-center" style={{ minHeight: '100vh' }}><Spinner text="Loading quiz questions..." /></div>
   if (error || !quiz) return (
     <div className="flex-center" style={{ minHeight: '100vh', flexDirection: 'column' }}>
       <h2 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--error)', marginBottom: '8px' }}>Quiz not found</h2>
@@ -141,7 +142,7 @@ export default function StudentPage() {
             {started && timerActive && (
               <span className={`timer-display ${timerClass}`}>{timerDisplay}</span>
             )}
-            <button onClick={() => setDark(!dark)} className="dark-toggle">
+            <button onClick={() => setDark(!dark)} className="dark-toggle" aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}>
               {dark ? '☀' : '☾'}
             </button>
           </div>

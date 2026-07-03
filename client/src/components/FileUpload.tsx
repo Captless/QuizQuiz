@@ -34,6 +34,8 @@ export default function FileUpload({ file, onChange, disabled }: Props) {
       ) : (
         <div
           className={`file-drop-zone ${dragOver ? 'drag-over' : ''} ${disabled ? 'hidden' : ''}`}
+          role="button" tabIndex={0} aria-label="Upload a PDF or PPTX file"
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click() }}
           onClick={() => inputRef.current?.click()}
           onDragOver={e => { e.preventDefault(); setDragOver(true) }}
           onDragLeave={() => setDragOver(false)}
