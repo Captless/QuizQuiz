@@ -8,5 +8,20 @@ export default defineConfig({
     proxy: {
       '/api': 'http://localhost:3000'
     }
+  },
+  build: {
+    sourcemap: false,
+    target: 'es2022',
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react')) return 'vendor-react'
+            if (id.includes('html2pdf')) return 'vendor-html2pdf'
+            return 'vendor'
+          }
+        }
+      }
+    }
   }
 })

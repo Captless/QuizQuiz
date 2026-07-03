@@ -3,26 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "description": "AI-powered quiz generator for teachers and trainers",
+  "workspaces": ["client", "server"],
   "scripts": {
-    "dev": "concurrently \"node server/index.js\" \"cd client && npm run dev\"",
-    "build": "npm install && cd client && npm install --include=dev && npm run build",
-    "start": "node server/index.js",
-    "lint": "cd client && npm run lint",
+    "dev": "concurrently \"npm start -w server\" \"npm run dev -w client\"",
+    "build": "npm install && npm run build -w client",
+    "start": "npm start -w server",
+    "lint": "npm run lint -w client",
     "postinstall": "node -e \"try { require('fs').mkdirSync(require('path').join(__dirname, 'data'), {recursive: true}); require('fs').writeFileSync(require('path').join(__dirname, 'data', 'usage.json'), '{}', 'utf-8'); } catch(e) { console.error('Failed to create data directory:', e.message); }\""
-  },
-  "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.1",
-    "express-async-errors": "^3.1.1",
-    "express-rate-limit": "^7.5.0",
-    "jsonrepair": "^3.14.1",
-    "jszip": "^3.10.1",
-    "helmet": "^8.0.0",
-    "multer": "^2.2.0",
-    "pdf-parse": "^2.4.5",
-    "stripe": "^17.5.0",
-    "@supabase/supabase-js": "^2.110.0"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
