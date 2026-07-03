@@ -22,10 +22,13 @@ export function useAuth() {
       const u = await getUsage()
       if (!u) return
 
-      // Only overwrite the local count if the server value is >= the current
-      // client count, or if the user is now paid (paid status is authoritative).
-      // This prevents a server fallback returning 0 from wiping out used quota.
-      const shouldUpdate = u.paid || u.usageCount >= usageCount
+      // Read the current usage from localStorage to avoid stale closures
+      // (refreshUsage may be called much later after a token refresh).
+      const currentUsage = parseInt(localStorage.getItem('quikquiz_usage') || '0', 10)
+
+      // Only overwrite if the server value is >= the current persisted count,
+      // or the user is now paid (paid status is always authoritative).
+      const shouldUpdate = u.paid || u.usageCount >= currentUsage
 
       if (shouldUpdate) {
         setUsageCount(u.usageCount)
