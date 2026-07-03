@@ -172,7 +172,10 @@ export default function GeneratorPage() {
       }
 
       setEntries(prev => [...prev, entry])
-      if (!paid) await incrementUsage()
+      if (!paid) {
+        const ok = await incrementUsage()
+        if (!ok) addToast('Could not record usage. Your quota may not update.', 'error')
+      }
       addToast(isDemo ? 'Free demo quiz generated! Upgrade to unlock unlimited.' : 'Quiz generated successfully!', 'success')
     } catch (err: any) {
       addToast(err.message || 'Failed to generate quiz.', 'error')
@@ -259,9 +262,9 @@ export default function GeneratorPage() {
     addToast('Subscribed! (dev mode)', 'success')
   }, [user, signIn, setPaidStatus])
 
-  const isDemo = !paid && usageCount < 1
-  const outOfFreeQuota = !paid && usageCount >= 1
-  const genBtnText = !user ? 'Sign in to generate free demo quiz' : paid ? 'Generate Quiz' : isDemo ? 'Generate Demo Quiz' : 'Upgrade to Pro to generate more quizzes'
+  const isDemo = !paid && usageCount < 3
+  const outOfFreeQuota = !paid && usageCount >= 3
+  const genBtnText = !user ? 'Sign in to generate free demo quiz' : paid ? 'Generate Quiz' : isDemo ? `Generate Demo Quiz (${Math.max(0, 3 - usageCount)} left)` : 'Out of free generations — Upgrade'
   const buttonLabel = outOfFreeQuota ? 'Upgrade to Pro to generate more quizzes' : genBtnText
 
   const stepContent = (s: number) => {

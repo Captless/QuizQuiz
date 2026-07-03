@@ -44,7 +44,8 @@ export function useAuth() {
       }
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'TOKEN_REFRESHED') return
       const newUser = session?.user
         ? { id: session.user.id, email: session.user.email ?? '', name: session.user.user_metadata?.full_name ?? '', avatar_url: session.user.user_metadata?.avatar_url }
         : null
@@ -82,14 +83,15 @@ export function useAuth() {
     supabase.auth.signOut()
   }
 
-  const incrementUsage = async () => {
-    const next = usageCount + 1
-    setUsageCount(next)
-    localStorage.setItem('quikquiz_usage', String(next))
+  const incrementUsage = async (): Promise<boolean> => {
     try {
-      await apiIncrementUsage()
+      const serverCount = await apiIncrementUsage()
+      setUsageCount(serverCount)
+      localStorage.setItem('quikquiz_usage', String(serverCount))
+      return true
     } catch (err) {
       console.warn('Failed to persist usage count on server:', err)
+      return false
     }
   }
 
