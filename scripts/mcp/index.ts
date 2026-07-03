@@ -6,6 +6,7 @@ import { setJsonMode } from './utils/logger'
 import {
   handleMigrate, handleSeed, handleFunctionUpload,
   handleSecretSet, handleSecretDelete,
+  handleUsageReset, handleUsageSet, handleUsageGet,
 } from './supabase/index'
 import {
   handleEnvSet, handleEnvUnset, handleEnvBatch,
@@ -16,6 +17,18 @@ import { resetDev } from './workflows/reset-dev'
 import { envSync } from './workflows/env-sync'
 
 const program = new Command()
+
+// Wrapper to catch errors and exit with non-zero code
+function wrapAction(fn: (...args: any[]) => Promise<void>) {
+  return async (...args: any[]) => {
+    try {
+      await fn(...args)
+    } catch (err: any) {
+      console.error('\n[MCP Error]', err.message || err)
+      process.exit(1)
+    }
+  }
+}
 
 program
   .name('mcp')
@@ -100,6 +113,46 @@ supabase
       dryRun: globals.dryRun, yes: globals.yes,
       supabaseUrl: cfg.supabaseUrl, supabaseKey: cfg.supabaseServiceRoleKey,
     }, key)
+  })
+
+supabase
+  .command('usage:reset')
+  .argument('<userId>', 'User ID to reset')
+  .description('Reset demo usage to 0 for a user')
+  .action(async (userId) => {
+    const globals = program.optsWithGlobals()
+    const cfg = loadConfig()
+    await handleUsageReset({
+      dryRun: globals.dryRun, yes: globals.yes,
+      supabaseUrl: cfg.supabaseUrl, supabaseKey: cfg.supabaseServiceRoleKey,
+    }, userId)
+  })
+
+supabase
+  .command('usage:set')
+  .argument('<userId>', 'User ID')
+  .argument('<count>', 'Usage count to set', parseInt)
+  .description('Set demo usage count for a user')
+  .action(async (userId, count) => {
+    const globals = program.optsWithGlobals()
+    const cfg = loadConfig()
+    await handleUsageSet({
+      dryRun: globals.dryRun, yes: globals.yes,
+      supabaseUrl: cfg.supabaseUrl, supabaseKey: cfg.supabaseServiceRoleKey,
+    }, userId, count)
+  })
+
+supabase
+  .command('usage:get')
+  .argument('<userId>', 'User ID')
+  .description('Get usage and profile info for a user')
+  .action(async (userId) => {
+    const globals = program.optsWithGlobals()
+    const cfg = loadConfig()
+    await handleUsageGet({
+      dryRun: globals.dryRun, yes: globals.yes,
+      supabaseUrl: cfg.supabaseUrl, supabaseKey: cfg.supabaseServiceRoleKey,
+    }, userId)
   })
 
 /* ── Render ──────────────────────────────────────────────── */

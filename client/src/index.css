@@ -510,8 +510,9 @@ header {
 .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
 .toast { padding: 12px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 500; box-shadow: var(--shadow-lg); pointer-events: auto; animation: slideInRight 0.3s ease; max-width: 400px; display: flex; align-items: center; gap: 10px; }
 .toast-success { background: var(--success); color: #fff; }
-.toast-error { background: var(--error); color: #fff; }
-.toast-info { background: var(--accent); color: #fff; }
+.toast-error   { background: var(--error); color: #fff; }
+.toast-warning { background: var(--bg-warning); color: var(--text-primary); border: 1px solid var(--border); }
+.toast-info    { background: var(--accent); color: #fff; }
 .toast-removing { animation: slideOutRight 0.3s ease forwards; }
 @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }

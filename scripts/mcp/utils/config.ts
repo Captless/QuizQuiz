@@ -23,10 +23,8 @@ export function loadConfig(): McpConfig {
     if (!process.env[key]) missing.push(`${key} (${label})`)
   }
   if (missing.length > 0) {
-    console.error('Missing required environment variables:')
-    missing.forEach(m => console.error(`  - ${m}`))
-    console.error('\nSet them in your .env file or export them before running MCP.')
-    process.exit(1)
+    const msg = `Missing required environment variables:\n${missing.map(m => `  - ${m}`).join('\n')}\n\nSet them in your .env file or export them before running MCP.`
+    throw new Error(msg)
   }
   return {
     supabaseUrl: process.env.SUPABASE_URL!,

@@ -20,6 +20,9 @@ describe('MCP CLI', () => {
     expect(out).toContain('seed')
     expect(out).toContain('func')
     expect(out).toContain('secret')
+    expect(out).toContain('usage:reset')
+    expect(out).toContain('usage:set')
+    expect(out).toContain('usage:get')
   })
 
   it('shows render subcommands', () => {

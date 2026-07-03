@@ -2,6 +2,7 @@ import { migrate } from './migrate'
 import { seed } from './seed'
 import { deployFunctions } from './functions'
 import { setSecret, deleteSecret } from './secrets'
+import { resetUsage, setUsage, getUsageForUser } from './usage'
 import { confirmAction } from '../utils/prompt'
 import { success, error, info } from '../utils/logger'
 
@@ -78,4 +79,37 @@ export async function handleSecretDelete(opts: SupabaseOptions, key: string) {
   }
   await deleteSecret(key, opts.supabaseUrl, opts.supabaseKey)
   success(`Secret ${key} deleted.`)
+}
+
+export async function handleUsageReset(opts: SupabaseOptions, userId: string) {
+  info(`Supabase: Resetting usage for user ${userId}...`)
+  if (opts.dryRun) {
+    info(`DRY RUN: Would reset usage to 0 for ${userId}`)
+    return
+  }
+  const ok = await confirmAction(`Reset demo usage to 0 for user "${userId}"?`, opts.yes)
+  if (!ok) { info('Cancelled.'); return }
+  await resetUsage(opts.supabaseUrl, opts.supabaseKey, userId)
+  success(`Usage reset to 0 for ${userId}.`)
+}
+
+export async function handleUsageSet(opts: SupabaseOptions, userId: string, count: number) {
+  info(`Supabase: Setting usage for user ${userId} to ${count}...`)
+  if (opts.dryRun) {
+    info(`DRY RUN: Would set usage to ${count} for ${userId}`)
+    return
+  }
+  const ok = await confirmAction(`Set demo usage to ${count} for user "${userId}"?`, opts.yes)
+  if (!ok) { info('Cancelled.'); return }
+  await setUsage(opts.supabaseUrl, opts.supabaseKey, userId, count)
+  success(`Usage set to ${count} for ${userId}.`)
+}
+
+export async function handleUsageGet(opts: SupabaseOptions, userId: string) {
+  info(`Supabase: Getting usage for user ${userId}...`)
+  if (opts.dryRun) {
+    info(`DRY RUN: Would fetch usage for ${userId}`)
+    return
+  }
+  await getUsageForUser(opts.supabaseUrl, opts.supabaseKey, userId)
 }

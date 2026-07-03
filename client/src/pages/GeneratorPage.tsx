@@ -174,7 +174,7 @@ export default function GeneratorPage() {
       setEntries(prev => [...prev, entry])
       if (!paid) {
         const ok = await incrementUsage()
-        if (!ok) addToast('Could not record usage. Your quota may not update.', 'error')
+        if (!ok) addToast('Could not record usage. Your quota may not update.', 'warning')
       }
       addToast(isDemo ? 'Free demo quiz generated! Upgrade to unlock unlimited.' : 'Quiz generated successfully!', 'success')
     } catch (err: any) {
