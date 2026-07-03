@@ -847,7 +847,7 @@ async function getProfile(userId, email) {
   return data;
 }
 
-async function incrementUsage(userId, email) {
+async function incrementUsage(userId, email, name, avatarUrl) {
   if (useLocalFallback) {
     return await incFallbackUsage(email || userId);
   }
@@ -856,8 +856,14 @@ async function incrementUsage(userId, email) {
   const current = (profile?.usage_count || 0) + 1;
   const { error } = await supabaseAdmin
     .from('profiles')
-    .upsert({ id: userId, usage_count: current }, { onConflict: 'id' })
-    .eq('id', userId);
+    .upsert({
+      id: userId,
+      email: email,
+      name: name || email,
+      avatar_url: avatarUrl,
+      usage_count: current,
+      subscription_status: profile?.subscription_status || 'inactive'
+    }, { onConflict: 'id' });
   if (error) console.error('Supabase incrementUsage error:', error);
   return current;
 }
@@ -927,7 +933,10 @@ app.post('/api/usage/increment', requireUser, async (req, res) => {
   if (!SUPABASE_ENABLED && !useLocalFallback) {
     return res.status(503).json({ error: 'Cannot increment usage – Supabase not configured.' });
   }
-  const newCount = await incrementUsage(req.user.id, req.user.email);
+  const { id, email, user_metadata } = req.user;
+  const name = user_metadata?.full_name || email;
+  const avatarUrl = user_metadata?.avatar_url;
+  const newCount = await incrementUsage(id, email, name, avatarUrl);
   res.json({ usageCount: newCount });
 });
 
