@@ -842,7 +842,7 @@ async function getProfile(userId, email) {
     .from('profiles')
     .select('*')
     .eq('id', userId)
-    .single();
+    .maybeSingle();
   if (error) return null;
   return data;
 }
@@ -852,9 +852,19 @@ async function incrementUsage(userId, email, name, avatarUrl) {
     return await incFallbackUsage(email || userId);
   }
   if (!SUPABASE_ENABLED) return 0;
-  const profile = await getProfile(userId, email);
-  const current = (profile?.usage_count || 0) + 1;
-  const { error } = await supabaseAdmin
+  // Use the atomic Postgres function defined in the schema, which does:
+  //   UPDATE profiles SET usage_count = usage_count + 1 WHERE id = user_id RETURNING usage_count
+  const { data, error } = await supabaseAdmin.rpc('increment_usage', { user_id: userId });
+  if (!error && data != null) return data;
+  if (error) console.error('Supabase incrementUsage RPC error:', error);
+  // Fallback: upsert directly (handles missing profile row or missing function)
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('usage_count, subscription_status')
+    .eq('id', userId)
+    .maybeSingle();
+  const current = ((profile?.usage_count) || 0) + 1;
+  const { error: upsertErr } = await supabaseAdmin
     .from('profiles')
     .upsert({
       id: userId,
@@ -864,7 +874,7 @@ async function incrementUsage(userId, email, name, avatarUrl) {
       usage_count: current,
       subscription_status: profile?.subscription_status || 'inactive'
     }, { onConflict: 'id' });
-  if (error) console.error('Supabase incrementUsage error:', error);
+  if (upsertErr) console.error('Supabase incrementUsage upsert error:', upsertErr);
   return current;
 }
 
