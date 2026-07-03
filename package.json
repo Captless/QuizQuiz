@@ -6,7 +6,7 @@
   "workspaces": ["client", "server"],
   "scripts": {
     "dev": "concurrently \"npm start -w server\" \"npm run dev -w client\"",
-    "build": "npm install && npm run build -w client",
+    "build": "npm install --include=dev && npm run build -w client",
     "start": "npm start -w server",
     "lint": "npm run lint -w client",
     "postinstall": "node -e \"try { require('fs').mkdirSync(require('path').join(__dirname, 'data'), {recursive: true}); require('fs').writeFileSync(require('path').join(__dirname, 'data', 'usage.json'), '{}', 'utf-8'); } catch(e) { console.error('Failed to create data directory:', e.message); }\""
