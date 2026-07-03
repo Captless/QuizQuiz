@@ -870,10 +870,16 @@ app.get('/api/profile', requireUser, async (req, res) => {
   res.json(profile);
 });
 
-// Get/subtract usage
+// Get usage
 app.get('/api/usage', requireUser, async (req, res) => {
   const profile = await getProfile(req.user.id);
   res.json({ usageCount: profile?.usage_count || 0, paid: profile?.subscription_status === 'active' });
+});
+
+// Increment usage (called after a quiz is generated)
+app.post('/api/usage/increment', requireUser, async (req, res) => {
+  const newCount = await incrementUsage(req.user.id);
+  res.json({ usageCount: newCount });
 });
 
 app.listen(PORT, () => {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../services/supabase'
-import { getUsage } from '../services/api'
+import { getUsage, incrementUsage as apiIncrementUsage } from '../services/api'
 import type { User } from '../types'
 
 function getLocalPaid(): boolean {
@@ -79,10 +79,13 @@ export function useAuth() {
     supabase.auth.signOut()
   }
 
-  const incrementUsage = () => {
+  const incrementUsage = async () => {
     const next = usageCount + 1
     setUsageCount(next)
     localStorage.setItem('quikquiz_usage', String(next))
+    try {
+      await apiIncrementUsage()
+    } catch {}
   }
 
   const setPaidStatus = (v: boolean) => {

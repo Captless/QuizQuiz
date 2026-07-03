@@ -170,7 +170,7 @@ export default function GeneratorPage() {
       }
 
       setEntries(prev => [...prev, entry])
-      if (!paid) incrementUsage()
+      if (!paid) await incrementUsage()
       addToast(isDemo ? 'Free demo quiz generated! Upgrade to unlock unlimited.' : 'Quiz generated successfully!', 'success')
     } catch (err: any) {
       addToast(err.message || 'Failed to generate quiz.', 'error')

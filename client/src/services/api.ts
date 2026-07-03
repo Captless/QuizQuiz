@@ -82,3 +82,10 @@ export async function getUsage(): Promise<{ usageCount: number; paid: boolean }>
     return { usageCount: 0, paid: false }
   }
 }
+
+export async function incrementUsage(): Promise<number> {
+  const res = await fetch('/api/usage/increment', { method: 'POST', headers: { ...await authHeaders() } })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Failed to increment usage')
+  return data.usageCount
+}
