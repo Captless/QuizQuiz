@@ -3,15 +3,30 @@
   "version": "1.0.0",
   "private": true,
   "description": "AI-powered quiz generator for teachers and trainers",
-  "workspaces": ["client", "server"],
+  "workspaces": [
+    "client",
+    "server"
+  ],
   "scripts": {
     "dev": "concurrently \"npm start -w server\" \"npm run dev -w client\"",
     "build": "npm install --include=dev && npm run build -w client",
     "start": "npm start -w server",
     "lint": "npm run lint -w client",
-    "postinstall": "node -e \"try { require('fs').mkdirSync(require('path').join(__dirname, 'data'), {recursive: true}); require('fs').writeFileSync(require('path').join(__dirname, 'data', 'usage.json'), '{}', 'utf-8'); } catch(e) { console.error('Failed to create data directory:', e.message); }\""
+    "postinstall": "node -e \"try { require('fs').mkdirSync(require('path').join(__dirname, 'data'), {recursive: true}); require('fs').writeFileSync(require('path').join(__dirname, 'data', 'usage.json'), '{}', 'utf-8'); } catch(e) { console.error('Failed to create data directory:', e.message); }\"",
+    "mcp": "tsx scripts/mcp/index.ts",
+    "mcp:deploy": "tsx scripts/mcp/index.ts deploy --yes",
+    "mcp:dry": "tsx scripts/mcp/index.ts deploy --dry-run",
+    "mcp:reset": "tsx scripts/mcp/index.ts reset-dev --yes",
+    "mcp:env-sync": "tsx scripts/mcp/index.ts env-sync"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "@types/chalk": "^0.4.31",
+    "@types/inquirer": "^9.0.10",
+    "axios": "^1.18.1",
+    "chalk": "^5.6.2",
+    "commander": "^15.0.0",
+    "concurrently": "^9.1.2",
+    "inquirer": "^14.0.2",
+    "tsx": "^4.22.5"
   }
 }

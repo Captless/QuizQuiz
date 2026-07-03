@@ -191,6 +191,20 @@ Each signed-in user gets **three free quiz generations** (the "demo"). After usi
 3. Run lint and tests before committing
 4. Open a pull request
 
+## Management CLI (MCP)
+
+A CLI tool to manage **Supabase** and **Render** — migrations, env vars, deployments, secrets, scaling, and more.
+
+```bash
+# Full deployment (migrate DB + deploy to Render)
+npm run mcp -- deploy --yes
+
+# Or use a pre-built script
+npm run mcp:deploy
+```
+
+See [`docs/mcp.md`](docs/mcp.md) for the full command reference and CI setup.
+
 ## License
 
 MIT
