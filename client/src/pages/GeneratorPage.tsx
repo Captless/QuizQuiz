@@ -133,7 +133,7 @@ export default function GeneratorPage() {
     if (!typeStr) { addToast('Select at least one question type.', 'error'); return }
     if (!num || num < 1 || num > 30) { addToast('Number of questions must be between 1 and 30.', 'error'); return }
 
-    const isDemo = !paid && usageCount < 1
+    const isDemo = !paid && usageCount < 3
     const finalNum = isDemo ? Math.min(10, num) : num
 
     setGenerating(true)
@@ -474,7 +474,7 @@ export default function GeneratorPage() {
 
             {/* Usage Info */}
             <div className="usage-info">
-              {paid ? 'Premium Plan' : `Free generations remaining: ${Math.max(0, 1 - usageCount)}`}
+              {paid ? 'Premium Plan' : `Free generations remaining: ${Math.max(0, 3 - usageCount)}`}
             </div>
           </div>
         </section>

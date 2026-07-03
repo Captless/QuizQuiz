@@ -169,7 +169,7 @@ cd client && npm run test:watch
 
 ## Demo Quota
 
-Each signed-in user gets **one free quiz generation** (the "demo"). After using it, the quota is permanently tied to their account and cannot be reset by logging out, clearing browser data, or restarting the server.
+Each signed-in user gets **three free quiz generations** (the "demo"). After using them, the quota is permanently tied to their account and cannot be reset by logging out, clearing browser data, or restarting the server.
 
 ### How it’s persisted
 
