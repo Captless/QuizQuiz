@@ -3,6 +3,7 @@ client/node_modules/
 .env
 uploads/
 backups/
+data/
 client/dist/
 server/__pycache__/
 *.log

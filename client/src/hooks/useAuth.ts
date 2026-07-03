@@ -26,7 +26,9 @@ export function useAuth() {
         localStorage.setItem('quikquiz_usage', String(u.usageCount))
         localStorage.setItem('quikquiz_paid', u.paid ? 'true' : 'false')
       }
-    } catch {}
+    } catch (err) {
+      console.warn('Failed to sync usage from server:', err)
+    }
   }
 
   useEffect(() => {
@@ -85,7 +87,9 @@ export function useAuth() {
     localStorage.setItem('quikquiz_usage', String(next))
     try {
       await apiIncrementUsage()
-    } catch {}
+    } catch (err) {
+      console.warn('Failed to persist usage count on server:', err)
+    }
   }
 
   const setPaidStatus = (v: boolean) => {

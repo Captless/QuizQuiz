@@ -12,6 +12,7 @@ const { jsonrepair } = require('jsonrepair');
 const { extractTextFromPDF } = require('./utils/pdf');
 const { extractTextFromPPTX } = require('./utils/pptx');
 const { validateGenerateBody, validateQuizSaveBody } = require('./utils/validate');
+const { getUsage: getFallbackUsage, incUsage: incFallbackUsage, setPaid: setFallbackPaid } = require('./utils/usageStore');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const app = express();
@@ -813,7 +814,10 @@ async function getResults(quizId) {
 }
 
 async function getProfile(userId) {
-  if (!supabaseAdmin) return null;
+  if (!supabaseAdmin) {
+    const fallback = await getFallbackUsage(userId);
+    return { usage_count: fallback.usageCount, subscription_status: fallback.paid ? 'active' : 'inactive' };
+  }
   const { data, error } = await supabaseAdmin
     .from('profiles')
     .select('*')
@@ -824,7 +828,9 @@ async function getProfile(userId) {
 }
 
 async function incrementUsage(userId) {
-  if (!supabaseAdmin) return 0;
+  if (!supabaseAdmin) {
+    return await incFallbackUsage(userId);
+  }
   const profile = await getProfile(userId);
   const current = (profile?.usage_count || 0) + 1;
   const { error } = await supabaseAdmin
@@ -852,18 +858,21 @@ async function setSubscription(userId, status, customerId) {
 app.get('/api/profile', requireUser, async (req, res) => {
   const profile = await getProfile(req.user.id);
   if (!profile) {
-    // Create profile on the fly
-    const { data, error } = await supabaseAdmin
-      .from('profiles')
-      .upsert({
-        id: req.user.id,
-        email: req.user.email,
-        name: req.user.user_metadata?.full_name || req.user.email,
-        avatar_url: req.user.user_metadata?.avatar_url
-      })
-      .select()
-      .single();
-    return res.json(data || { id: req.user.id, email: req.user.email, usage_count: 0, subscription_status: 'inactive' });
+    if (supabaseAdmin) {
+      const { data, error } = await supabaseAdmin
+        .from('profiles')
+        .upsert({
+          id: req.user.id,
+          email: req.user.email,
+          name: req.user.user_metadata?.full_name || req.user.email,
+          avatar_url: req.user.user_metadata?.avatar_url
+        })
+        .select()
+        .single();
+      return res.json(data || { id: req.user.id, email: req.user.email, usage_count: 0, subscription_status: 'inactive' });
+    }
+    // Fallback: return default profile
+    return res.json({ id: req.user.id, email: req.user.email, usage_count: 0, subscription_status: 'inactive' });
   }
   res.json(profile);
 });

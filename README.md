@@ -164,6 +164,23 @@ cd server && npm test
 cd client && npm run test:watch
 ```
 
+## Demo Quota
+
+Each signed-in user gets **one free quiz generation** (the "demo"). After using it, the quota is permanently tied to their account and cannot be reset by logging out, clearing browser data, or restarting the server.
+
+### How it’s persisted
+
+1. **Primary path** — When Supabase is configured with a `SUPABASE_SERVICE_ROLE_KEY`, the usage count is stored in the `profiles.usage_count` column. This survives server restarts and device changes.
+2. **Fallback path** — If Supabase is not configured, the server writes usage data to `data/usage.json`. This file is created automatically on first server start (or by `npm install`). It is not committed to Git (`data/` is in `.gitignore`).
+
+### Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---------|-------------|-----|
+| Demo quota resets after page reload | Supabase not configured and `data/usage.json` was deleted or is unwritable. | Run `npm run postinstall` (or `npm install`) to recreate the file. |
+| Demo quota resets after deployment | The `data/` directory is inside a temporary filesystem on Render and is lost on each deploy. | Configure Supabase (`SUPABASE_SERVICE_ROLE_KEY`) to use the database instead. |
+| Demo button stays disabled after paying | The `paid` flag in the profile (`subscription_status`) hasn’t been updated. | Verify Stripe webhook is calling `/api/stripe-webhook` correctly. |
+
 ## Contributing
 
 1. Fork the repo

@@ -7,7 +7,8 @@
     "dev": "concurrently \"node server/index.js\" \"cd client && npm run dev\"",
     "build": "npm install && cd client && npm install --include=dev && npm run build",
     "start": "node server/index.js",
-    "lint": "cd client && npm run lint"
+    "lint": "cd client && npm run lint",
+    "postinstall": "node -e \"try { require('fs').mkdirSync(require('path').join(__dirname, 'data'), {recursive: true}); require('fs').writeFileSync(require('path').join(__dirname, 'data', 'usage.json'), '{}', 'utf-8'); } catch(e) { console.error('Failed to create data directory:', e.message); }\""
   },
   "dependencies": {
     "cors": "^2.8.5",
