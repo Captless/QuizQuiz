@@ -17,6 +17,7 @@
     "express-rate-limit": "^7.5.0",
     "jsonrepair": "^3.14.1",
     "jszip": "^3.10.1",
+    "helmet": "^8.0.0",
     "multer": "^2.2.0",
     "pdf-parse": "^2.4.5",
     "stripe": "^17.5.0",
