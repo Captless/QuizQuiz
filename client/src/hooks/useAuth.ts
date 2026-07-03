@@ -71,7 +71,8 @@ export function useAuth() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const signIn = () => supabase.auth.signInWithOAuth({ provider: 'google' })
+  const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin
+  const signIn = () => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: siteUrl } })
   const signOut = () => {
     localStorage.removeItem('quikquiz_user')
     localStorage.removeItem('quikquiz_paid')

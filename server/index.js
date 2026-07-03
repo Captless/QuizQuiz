@@ -12,8 +12,19 @@ const { jsonrepair } = require('jsonrepair');
 const { extractTextFromPDF } = require('./utils/pdf');
 const { extractTextFromPPTX } = require('./utils/pptx');
 const { validateGenerateBody, validateQuizSaveBody } = require('./utils/validate');
-const { getUsage: getFallbackUsage, incUsage: incFallbackUsage, setPaid: setFallbackPaid } = require('./utils/usageStore');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+
+/* ===== Supabase availability check ===== */
+const SUPABASE_ENABLED = process.env.SUPABASE_ENABLED === 'true' && !!process.env.SUPABASE_URL && !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+const useLocalFallback = process.env.USE_LOCAL_FALLBACK === 'true';
+let getFallbackUsage, incFallbackUsage, setFallbackPaid;
+if (useLocalFallback) {
+  const fb = require('./utils/usageStore');
+  getFallbackUsage = fb.getUsage;
+  incFallbackUsage = fb.incUsage;
+  setFallbackPaid = fb.setPaid;
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -690,8 +701,16 @@ const supabaseAdmin = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_R
     })
   : null;
 
-if (!supabaseAdmin) {
-  console.warn('WARNING: Supabase not configured — in-memory stores will be used');
+if (!SUPABASE_ENABLED && !useLocalFallback) {
+  console.error('Supabase not configured and local fallback is disabled. Usage/profile endpoints will return 503.');
+  if (process.env.NODE_ENV === 'production') {
+    console.error('Production environment detected – aborting.');
+    process.exit(1);
+  }
+} else if (useLocalFallback) {
+  console.warn('Local fallback store enabled — profile/usage data will be file-backed.');
+} else {
+  console.log('Supabase configured — using production data store.');
 }
 
 /* ===== Auth middleware (verify Supabase JWT) ===== */
@@ -813,11 +832,12 @@ async function getResults(quizId) {
   return sharedResults.get(quizId) || [];
 }
 
-async function getProfile(userId) {
-  if (!supabaseAdmin) {
-    const fallback = await getFallbackUsage(userId);
+async function getProfile(userId, email) {
+  if (useLocalFallback) {
+    const fallback = await getFallbackUsage(email || userId);
     return { usage_count: fallback.usageCount, subscription_status: fallback.paid ? 'active' : 'inactive' };
   }
+  if (!SUPABASE_ENABLED) return null;
   const { data, error } = await supabaseAdmin
     .from('profiles')
     .select('*')
@@ -827,15 +847,16 @@ async function getProfile(userId) {
   return data;
 }
 
-async function incrementUsage(userId) {
-  if (!supabaseAdmin) {
-    return await incFallbackUsage(userId);
+async function incrementUsage(userId, email) {
+  if (useLocalFallback) {
+    return await incFallbackUsage(email || userId);
   }
-  const profile = await getProfile(userId);
+  if (!SUPABASE_ENABLED) return 0;
+  const profile = await getProfile(userId, email);
   const current = (profile?.usage_count || 0) + 1;
   const { error } = await supabaseAdmin
     .from('profiles')
-    .update({ usage_count: current })
+    .upsert({ id: userId, usage_count: current }, { onConflict: 'id' })
     .eq('id', userId);
   if (error) console.error('Supabase incrementUsage error:', error);
   return current;
@@ -856,9 +877,12 @@ async function setSubscription(userId, status, customerId) {
 
 // Get current user profile
 app.get('/api/profile', requireUser, async (req, res) => {
-  const profile = await getProfile(req.user.id);
+  if (!SUPABASE_ENABLED && !useLocalFallback) {
+    return res.status(503).json({ error: 'Service offline – Supabase not configured.' });
+  }
+  const profile = await getProfile(req.user.id, req.user.email);
   if (!profile) {
-    if (supabaseAdmin) {
+    if (SUPABASE_ENABLED) {
       const { data, error } = await supabaseAdmin
         .from('profiles')
         .upsert({
@@ -871,7 +895,6 @@ app.get('/api/profile', requireUser, async (req, res) => {
         .single();
       return res.json(data || { id: req.user.id, email: req.user.email, usage_count: 0, subscription_status: 'inactive' });
     }
-    // Fallback: return default profile
     return res.json({ id: req.user.id, email: req.user.email, usage_count: 0, subscription_status: 'inactive' });
   }
   res.json(profile);
@@ -879,13 +902,32 @@ app.get('/api/profile', requireUser, async (req, res) => {
 
 // Get usage
 app.get('/api/usage', requireUser, async (req, res) => {
-  const profile = await getProfile(req.user.id);
+  if (!SUPABASE_ENABLED && !useLocalFallback) {
+    return res.json({ usageCount: 0, paid: false, message: 'Demo unavailable – please try later.' });
+  }
+  let profile = await getProfile(req.user.id, req.user.email);
+  if (!profile && SUPABASE_ENABLED) {
+    const { data, error } = await supabaseAdmin
+      .from('profiles')
+      .upsert({
+        id: req.user.id,
+        email: req.user.email,
+        name: req.user.user_metadata?.full_name || req.user.email,
+        avatar_url: req.user.user_metadata?.avatar_url
+      })
+      .select()
+      .single();
+    if (!error) profile = data;
+  }
   res.json({ usageCount: profile?.usage_count || 0, paid: profile?.subscription_status === 'active' });
 });
 
 // Increment usage (called after a quiz is generated)
 app.post('/api/usage/increment', requireUser, async (req, res) => {
-  const newCount = await incrementUsage(req.user.id);
+  if (!SUPABASE_ENABLED && !useLocalFallback) {
+    return res.status(503).json({ error: 'Cannot increment usage – Supabase not configured.' });
+  }
+  const newCount = await incrementUsage(req.user.id, req.user.email);
   res.json({ usageCount: newCount });
 });
 
@@ -894,5 +936,6 @@ app.listen(PORT, () => {
   if (!process.env.OPENROUTER_KEY) console.warn('WARNING: OPENROUTER_KEY not set in .env');
   if (!process.env.STRIPE_SECRET_KEY) console.warn('WARNING: Stripe keys not set — payments disabled');
   if (!process.env.GOOGLE_CLIENT_ID) console.warn('WARNING: GOOGLE_CLIENT_ID not set — Google sign-in disabled');
-  if (!supabaseAdmin) console.warn('WARNING: Supabase not configured — using in-memory fallback');
+  if (!SUPABASE_ENABLED && !useLocalFallback) console.warn('Supabase not configured – usage/profile endpoints will return 503.');
+  else if (useLocalFallback) console.log('Local fallback store active – file-backed usage data.');
 });

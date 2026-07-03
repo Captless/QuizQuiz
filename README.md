@@ -56,8 +56,11 @@ cp client/.env.example client/.env
 |----------|-------|-------------|
 | `VITE_SUPABASE_URL` | `client/.env` | Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | `client/.env` | Supabase anon/public key |
+| `VITE_SITE_URL` | `client/.env` | App origin for OAuth redirect (e.g. `http://localhost:5173` or `https://my-app.onrender.com`). Falls back to `window.location.origin` |
 | `SUPABASE_URL` | Root `.env` | Same as above (server-side) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Root `.env` | Supabase service role key (secret) |
+| `SUPABASE_ENABLED` | Root `.env` | Must be `true` in production (server aborts if missing). When `false`, usage/profile endpoints return a 503 message. |
+| `USE_LOCAL_FALLBACK` | Root `.env` | Dev‑only: set to `true` to store usage data in `data/usage.json` instead of Supabase profiles table. Requires `SUPABASE_ENABLED=true` for auth. |
 | `OPENROUTER_KEY` | Root `.env` | OpenRouter API key |
 | `GOOGLE_CLIENT_ID` | Root `.env` | Google OAuth client ID |
 
