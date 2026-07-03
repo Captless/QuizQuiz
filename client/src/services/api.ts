@@ -106,3 +106,36 @@ export async function updateQuiz(id: string, data: Record<string, unknown>): Pro
     throw new Error(response.error || 'Failed to update quiz')
   }
 }
+
+// ─── Saved Quizzes ─────────────────────────────────
+
+export async function getQuizzes(): Promise<any[]> {
+  const headers = await authHeaders()
+  const res = await fetch('/api/quizzes', { headers })
+  if (!res.ok) return []
+  const data = await res.json()
+  return data.quizzes || []
+}
+
+export async function saveQuizToServer(quiz: {
+  title: string
+  topic: string
+  subject: string
+  difficulty: string
+  questions: any[]
+  timerSeconds: number
+  format: string
+}): Promise<string> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', ...await authHeaders() }
+  const res = await fetch('/api/quizzes', { method: 'POST', headers, body: JSON.stringify(quiz) })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Failed to save quiz')
+  return data.id
+}
+
+export async function deleteQuizFromServer(id: string): Promise<boolean> {
+  const headers = await authHeaders()
+  const res = await fetch(`/api/quizzes/${id}`, { method: 'DELETE', headers })
+  if (!res.ok) return false
+  return true
+}

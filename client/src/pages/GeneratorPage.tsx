@@ -1,7 +1,15 @@
 import { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react'
 import { useAuth } from '../hooks/useAuth'
+import { useQuota } from '../hooks/useQuota'
+import { useSavedQuizzes } from '../hooks/useSavedQuizzes'
 import { useScrollReveal } from '../hooks/useScrollReveal'
-import { generateQuiz as apiGenerate, createCheckoutSession, checkPaymentStatus, saveQuiz as apiSaveQuiz, updateQuiz as apiUpdateQuiz } from '../services/api'
+import {
+  generateQuiz as apiGenerate,
+  createCheckoutSession,
+  checkPaymentStatus,
+  saveQuiz as apiSaveQuiz,
+  updateQuiz as apiUpdateQuiz,
+} from '../services/api'
 import type { QuizEntry, QuizQuestion, QuizResult } from '../types'
 import TopicChips from '../components/TopicChips'
 import FileUpload from '../components/FileUpload'
@@ -55,8 +63,10 @@ const FAQS = [
 ]
 
 export default function GeneratorPage() {
-  const { user, loading: authLoading, paid, usageCount, signIn, signOut, incrementUsage, setPaidStatus } = useAuth()
-  const [entries, setEntries] = useState<QuizEntry[]>([])
+  const { user, loading: authLoading, signIn, signOut, incrementUsage, setPaidStatus } = useAuth()
+  const { isPaid, remainingFree, outOfFreeQuota } = useQuota()
+  const { quizzes, loading: quizzesLoading, addQuiz, deleteQuiz, updateQuiz } = useSavedQuizzes()
+
   const [subject, setSubject] = useState('')
   const [grade, setGrade] = useState('')
   const [topic, setTopic] = useState('')
@@ -133,8 +143,10 @@ export default function GeneratorPage() {
     if (!typeStr) { addToast('Select at least one question type.', 'error'); return }
     if (!num || num < 1 || num > 30) { addToast('Number of questions must be between 1 and 30.', 'error'); return }
 
-    const isDemo = !paid && usageCount < 3
-    const finalNum = isDemo ? Math.min(10, num) : num
+    if (outOfFreeQuota && !isPaid) {
+      setShowPaywall(true)
+      return
+    }
 
     setGenerating(true)
     setGenProgress('Generating your quiz...')
@@ -149,14 +161,14 @@ export default function GeneratorPage() {
     try {
       const questions: QuizQuestion[] = file
         ? []
-        : await apiGenerate(topic, difficulty, typeStr, finalNum)
+        : await apiGenerate(topic, difficulty, typeStr, isPaid ? num : Math.min(10, num))
 
       const resolvedTopic = topic || file?.name?.replace(/\.(pdf|pptx)$/i, '') || 'Untitled Quiz'
       const entryId = `q_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
 
       const entry: QuizEntry = {
         id: entryId,
-        title: `Quiz ${entries.length + 1}`,
+        title: `Quiz ${quizzes.length + 1}`,
         topic: resolvedTopic,
         subject,
         difficulty,
@@ -171,12 +183,13 @@ export default function GeneratorPage() {
         showScore: false,
       }
 
-      setEntries(prev => [...prev, entry])
-      if (!paid) {
+      if (!isPaid) {
         const ok = await incrementUsage()
         if (!ok) addToast('Could not record usage. Your quota may not update.', 'warning')
       }
-      addToast(isDemo ? 'Free demo quiz generated! Upgrade to unlock unlimited.' : 'Quiz generated successfully!', 'success')
+
+      await addQuiz(entry)
+      addToast(isPaid ? 'Quiz generated successfully!' : 'Free demo quiz generated! Upgrade to unlock unlimited.', 'success')
     } catch (err: any) {
       addToast(err.message || 'Failed to generate quiz.', 'error')
     } finally {
@@ -184,7 +197,7 @@ export default function GeneratorPage() {
       setGenerating(false)
       setGenProgress('')
     }
-  }, [generating, user, paid, usageCount, topic, file, difficulty, num, format, types, timerSeconds, subject, grade, signIn, incrementUsage, entries.length])
+  }, [generating, user, signIn, outOfFreeQuota, isPaid, topic, file, difficulty, num, format, types, timerSeconds, subject, quizzes.length, addQuiz, incrementUsage])
 
   const handleShare = useCallback(async (entry: QuizEntry) => {
     try {
@@ -193,7 +206,7 @@ export default function GeneratorPage() {
         await apiUpdateQuiz(id, { showScore: entry.showScore, timerSeconds: entry.timerSeconds, format: entry.studentFormat, title: entry.title, subject: entry.subject })
       } else {
         id = await apiSaveQuiz({ questions: entry.questions, topic: entry.topic, difficulty: entry.difficulty, showScore: entry.showScore, timerSeconds: entry.timerSeconds, format: entry.studentFormat, title: entry.title, subject: entry.subject })
-        setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, shareId: id } : e))
+        updateQuiz(entry.id, { shareId: id })
       }
       if (id) {
         await navigator.clipboard.writeText(`${window.location.origin}/quiz/${id}`)
@@ -202,7 +215,7 @@ export default function GeneratorPage() {
     } catch (err: any) {
       addToast(err.message || 'Failed to share', 'error')
     }
-  }, [])
+  }, [updateQuiz])
 
   const handleResults = useCallback(async (shareId: string, _questions: QuizQuestion[]): Promise<QuizResult[]> => {
     try {
@@ -262,10 +275,7 @@ export default function GeneratorPage() {
     addToast('Subscribed! (dev mode)', 'success')
   }, [user, signIn, setPaidStatus])
 
-  const isDemo = !paid && usageCount < 3
-  const outOfFreeQuota = !paid && usageCount >= 3
-  const genBtnText = !user ? 'Sign in to generate free demo quiz' : paid ? 'Generate Quiz' : isDemo ? `Generate Demo Quiz (${Math.max(0, 3 - usageCount)} left)` : 'Out of free generations — Upgrade'
-  const buttonLabel = outOfFreeQuota ? 'Upgrade to Pro to generate more quizzes' : genBtnText
+  const buttonLabel = !user ? 'Sign in to generate free demo quiz' : isPaid ? 'Generate Quiz' : outOfFreeQuota ? 'Out of free generations — Upgrade' : `Generate Demo Quiz (${remainingFree} left)`
 
   const stepContent = (s: number) => {
     switch (s) {
@@ -296,10 +306,10 @@ export default function GeneratorPage() {
             <span className="gradient-text">QuikQuiz</span>
           </a>
           <div className="flex-center" style={{ gap: '12px' }}>
-<button onClick={() => setDark(!dark)} className="dark-toggle" aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}>
-                {dark ? '☀' : '☾'}
-              </button>
-            {user && !paid && (
+            <button onClick={() => setDark(!dark)} className="dark-toggle" aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}>
+              {dark ? '☀' : '☾'}
+            </button>
+            {user && !isPaid && (
               <button onClick={handleSubscribe} className="btn btn-primary btn-sm">
                 Upgrade to Pro
               </button>
@@ -380,7 +390,7 @@ export default function GeneratorPage() {
         </section>
 
         {/* Generator Form */}
-        <section id="generatorSection" className={`card reveal reveal-card ${!paid && user ? 'demo-mode' : ''}`}>
+        <section id="generatorSection" className={`card reveal reveal-card ${!isPaid && user ? 'demo-mode' : ''}`}>
           <h2 className="card-title">Create Your Quiz</h2>
 
           {!user && (
@@ -422,7 +432,7 @@ export default function GeneratorPage() {
             </div>
 
             {/* File Upload */}
-            <FileUpload file={file} onChange={f => { setFile(f); if (f) setTopic('') }} disabled={!paid && user !== null} />
+            <FileUpload file={file} onChange={f => { setFile(f); if (f) setTopic('') }} disabled={!isPaid && user !== null} />
 
             <div className="section-divider"></div>
 
@@ -470,31 +480,38 @@ export default function GeneratorPage() {
             <TimerInput enabled={timerEnabled} seconds={timerSeconds} onToggle={setTimerEnabled} onChange={setTimerSeconds} />
 
             {/* Generate Button */}
-            <button onClick={outOfFreeQuota ? () => setShowPaywall(true) : handleGenerate} disabled={generating || !user}
-              className={`btn btn-block ${generating ? 'btn-secondary' : !user ? 'btn-primary' : paid ? 'btn-primary' : isDemo ? 'btn-primary' : 'btn-warning'}`}>
+            <button onClick={outOfFreeQuota && !isPaid ? () => setShowPaywall(true) : handleGenerate} disabled={generating || !user}
+              className={`btn btn-block ${generating ? 'btn-secondary' : !user ? 'btn-primary' : isPaid ? 'btn-primary' : outOfFreeQuota ? 'btn-warning' : 'btn-primary'}`}>
               {generating ? genProgress || 'Generating...' : buttonLabel}
             </button>
 
             {/* Usage Info */}
             <div className="usage-info">
-              {paid ? 'Premium Plan' : `Free generations remaining: ${Math.max(0, 3 - usageCount)}`}
+              {isPaid ? 'Premium Plan' : `Free generations remaining: ${remainingFree}`}
             </div>
           </div>
         </section>
 
-        {/* Quiz Stack */}
-        <Suspense fallback={<Spinner text="Loading quizzes..." />}>
-          {entries.length > 0 && (
-            <QuizStack
-              entries={entries}
-              onDelete={id => setEntries(prev => prev.filter(e => e.id !== id))}
-              onUpdate={(id, updates) => setEntries(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e))}
-              onShare={handleShare}
-              onResults={handleResults}
-              onExportPDF={handleExportPDF}
-            />
+        {/* Saved Quizzes */}
+        <section className={`card reveal reveal-card quiz-stack-section ${quizzes.length === 0 ? 'hidden' : ''}`}>
+          <h2 className="card-title">Your Quizzes</h2>
+          {quizzesLoading ? (
+            <Spinner text="Loading quizzes..." />
+          ) : (
+            <Suspense fallback={<Spinner text="Loading quizzes..." />}>
+              {quizzes.length > 0 && (
+                <QuizStack
+                  entries={quizzes}
+                  onDelete={id => deleteQuiz(id)}
+                  onUpdate={(id, updates) => updateQuiz(id, updates)}
+                  onShare={handleShare}
+                  onResults={handleResults}
+                  onExportPDF={handleExportPDF}
+                />
+              )}
+            </Suspense>
           )}
-        </Suspense>
+        </section>
 
         {/* FAQ */}
         <section className="section-faq reveal reveal-card">

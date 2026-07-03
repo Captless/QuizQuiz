@@ -20,12 +20,19 @@ export function useAuth() {
   const refreshUsage = async () => {
     try {
       const u = await getUsage()
-      if (u) {
+      if (!u) return
+
+      // Only overwrite the local count if the server value is >= the current
+      // client count, or if the user is now paid (paid status is authoritative).
+      // This prevents a server fallback returning 0 from wiping out used quota.
+      const shouldUpdate = u.paid || u.usageCount >= usageCount
+
+      if (shouldUpdate) {
         setUsageCount(u.usageCount)
-        setPaid(u.paid)
         localStorage.setItem('quikquiz_usage', String(u.usageCount))
-        localStorage.setItem('quikquiz_paid', u.paid ? 'true' : 'false')
       }
+      setPaid(u.paid)
+      localStorage.setItem('quikquiz_paid', u.paid ? 'true' : 'false')
     } catch (err) {
       console.warn('Failed to sync usage from server:', err)
     }
@@ -101,5 +108,5 @@ export function useAuth() {
     if (v) refreshUsage()
   }
 
-  return { user, loading, paid, usageCount, signIn, signOut, incrementUsage, setPaidStatus }
+  return { user, loading, paid, usageCount, signIn, signOut, incrementUsage, setPaidStatus, refreshUsage }
 }

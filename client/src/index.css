@@ -355,6 +355,9 @@ header {
 .quiz-area { display: none; }
 .quiz-area.active { display: block; animation: fadeIn 0.4s ease; }
 
+/* ===== Quiz Stack Section ===== */
+.quiz-stack-section { margin-top: 24px; }
+
 /* ===== Quiz Stack / Entry ===== */
 .quiz-stack-empty {
   text-align: center; padding: 48px 20px;

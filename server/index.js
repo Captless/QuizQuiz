@@ -19,11 +19,16 @@ const SUPABASE_ENABLED = process.env.SUPABASE_ENABLED === 'true' && !!process.en
 
 const useLocalFallback = process.env.USE_LOCAL_FALLBACK === 'true';
 let getFallbackUsage, incFallbackUsage, setFallbackPaid;
+let getFallbackQuizzes, addFallbackQuiz, deleteFallbackQuiz;
 if (useLocalFallback) {
   const fb = require('./utils/usageStore');
   getFallbackUsage = fb.getUsage;
   incFallbackUsage = fb.incUsage;
   setFallbackPaid = fb.setPaid;
+  const qs = require('./utils/quizzesStore');
+  getFallbackQuizzes = qs.getUserQuizzes;
+  addFallbackQuiz = qs.addQuiz;
+  deleteFallbackQuiz = qs.deleteQuiz;
 }
 
 const app = express();
@@ -948,6 +953,92 @@ app.post('/api/usage/increment', requireUser, async (req, res) => {
   const avatarUrl = user_metadata?.avatar_url;
   const newCount = await incrementUsage(id, email, name, avatarUrl);
   res.json({ usageCount: newCount });
+});
+
+// Get all quizzes for the current user
+app.get('/api/quizzes', requireUser, async (req, res) => {
+  if (useLocalFallback) {
+    const quizzes = await getFallbackQuizzes(req.user.id);
+    return res.json({ quizzes });
+  }
+  if (!SUPABASE_ENABLED) {
+    return res.status(503).json({ error: 'Service offline – Supabase not configured.' });
+  }
+  const { data, error } = await supabaseAdmin
+    .from('quizzes')
+    .select('*')
+    .eq('user_id', req.user.id)
+    .order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ quizzes: data || [] });
+});
+
+// Save a new quiz
+app.post('/api/quizzes', requireUser, async (req, res) => {
+  const { title, topic, subject, difficulty, questions, timerSeconds, format } = req.body;
+  if (!questions?.length) return res.status(400).json({ error: 'Questions are required.' });
+
+  const id = `q_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+
+  if (useLocalFallback) {
+    const entry = {
+      id,
+      title: title || 'Untitled Quiz',
+      topic: topic || '',
+      subject: subject || '',
+      difficulty: difficulty || 'Easy',
+      questions,
+      timerSeconds: timerSeconds || 0,
+      format: format || 'form',
+      showScore: false,
+      shareId: null,
+      createdAt: new Date().toISOString()
+    };
+    await addFallbackQuiz(req.user.id, entry);
+    return res.json({ id });
+  }
+
+  if (!SUPABASE_ENABLED) {
+    return res.status(503).json({ error: 'Service offline – Supabase not configured.' });
+  }
+
+  const { error } = await supabaseAdmin
+    .from('quizzes')
+    .insert({
+      id,
+      user_id: req.user.id,
+      title: title || 'Untitled Quiz',
+      topic: topic || '',
+      subject: subject || '',
+      difficulty: difficulty || 'Easy',
+      format: format || 'form',
+      timer_seconds: timerSeconds || 0,
+      questions
+    });
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ id });
+});
+
+// Delete a quiz
+app.delete('/api/quizzes/:id', requireUser, async (req, res) => {
+  const { id } = req.params;
+
+  if (useLocalFallback) {
+    await deleteFallbackQuiz(req.user.id, id);
+    return res.json({ success: true });
+  }
+
+  if (!SUPABASE_ENABLED) {
+    return res.status(503).json({ error: 'Service offline – Supabase not configured.' });
+  }
+
+  const { error } = await supabaseAdmin
+    .from('quizzes')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', req.user.id);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ success: true });
 });
 
 app.listen(PORT, () => {
