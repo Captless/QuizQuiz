@@ -610,7 +610,7 @@ header {
   text-align: center;
   width: 100vw;
   margin-left: calc(-50vw + 50%);
-  padding: 0 0 32px;
+  padding: 24px 0 32px;
   overflow: hidden;
 }
 
