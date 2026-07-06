@@ -455,6 +455,7 @@ header {
 .tag-truefalse { color: var(--warning); border-color: var(--warning); }
 .tag-dropdown { color: var(--accent); border-color: var(--accent); }
 
+
 .question-text {
   font-size: 16px; font-weight: 600; color: var(--text-primary);
   margin-bottom: 16px; line-height: 1.6;
@@ -486,6 +487,11 @@ header {
 .dropdown-wrapper.selected .dropdown-select { border-color: var(--accent); }
 .dropdown-wrapper.correct .dropdown-select { border-color: var(--success); }
 .dropdown-wrapper.incorrect .dropdown-select { border-color: var(--error); }
+
+
+
+
+
 
 .answer-reveal {
   margin-top: 12px; padding: 10px 14px;

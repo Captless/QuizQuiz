@@ -11,6 +11,7 @@ export interface QuizQuestion {
   options: string[]
   answer: string
   emoji?: string
+  explanation?: string
   shuffledOptions?: string[]
 }
 
@@ -24,6 +25,7 @@ export interface SharedQuiz {
   timerSeconds: number
   showScore: boolean
   questions: QuizQuestion[]
+  learningMode?: boolean
   createdAt: string
 }
 
@@ -39,6 +41,9 @@ export interface QuizEntry {
   studentFormat: 'form' | 'slide'
   shareId: string | null
   showScore: boolean
+  learningMode?: boolean
+  adaptiveMode?: boolean
+  gamifiedMode?: boolean
 }
 
 export interface QuizResult {

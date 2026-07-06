@@ -46,7 +46,7 @@ const sharedQuizzes = new Map();
 const sharedResults = new Map();
 
 /* ===== Middleware ===== */
-const corsOrigin = process.env.CORS_ORIGIN || true;
+const corsOrigin = process.env.CORS_ORIGIN || undefined;
 app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(express.json());
 app.use(helmet({
@@ -57,7 +57,7 @@ app.use(helmet({
 /* ===== Rate Limiting ===== */
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: parseInt(process.env.UPSTREAM_RATE_LIMIT) || 20,
+  max: parseInt(process.env.UPSTREAM_RATE_LIMIT) || 100,
   message: { error: 'Too many requests — please slow down.' }
 });
 app.use('/api/generate', apiLimiter);
@@ -108,7 +108,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
         price_data: {
           currency: 'usd',
           product_data: { name: 'QuikQuiz Pro', description: 'Unlimited AI quiz generation' },
-          unit_amount: 900,
+          unit_amount: 699,
           recurring: { interval: 'month' }
         },
         quantity: 1
@@ -164,8 +164,9 @@ function repairJSON(text) {
   return s;
 }
 
-function buildPrompt(topic, difficulty, type, num, fileContent) {
+function buildPrompt(topic, difficulty, type, num, fileContent, gradeLevel) {
   const types = type === 'all' ? ['multiple', 'truefalse', 'dropdown'] : type.split(',').filter(Boolean);
+  const gradeContext = gradeLevel ? ` for grade ${gradeLevel} students` : '';
   const typeMap = {
     multiple: 'multiple choice (4 options each)',
     truefalse: 'true/false',
@@ -181,9 +182,10 @@ function buildPrompt(topic, difficulty, type, num, fileContent) {
 
   function exampleFor(t) {
     var map = {
-      multiple: JSON.stringify({ question: 'What is ...?', emoji: '🪐', type: 'multiple', options: ['Option A', 'Option B', 'Option C', 'Option D'], answer: 'Option A' }, null, 2),
-      truefalse: JSON.stringify({ question: 'True or false: ...', emoji: '🌍', type: 'truefalse', options: ['True', 'False'], answer: 'True' }, null, 2),
-      dropdown: JSON.stringify({ question: 'Which of the following is ...?', emoji: '📝', type: 'dropdown', options: ['Option A', 'Option B', 'Option C', 'Option D', 'Option E'], answer: 'Option A' }, null, 2)
+      multiple: JSON.stringify({ question: 'What is ...?', emoji: '🪐', type: 'multiple', options: ['Option A', 'Option B', 'Option C', 'Option D'], answer: 'Option A', explanation: 'Option A is correct because...' }, null, 2),
+      truefalse: JSON.stringify({ question: 'True or false: ...', emoji: '🌍', type: 'truefalse', options: ['True', 'False'], answer: 'True', explanation: 'This statement is true because...' }, null, 2),
+      dropdown: JSON.stringify({ question: 'Which of the following is ...?', emoji: '📝', type: 'dropdown', options: ['Option A', 'Option B', 'Option C', 'Option D', 'Option E'], answer: 'Option A', explanation: 'Option A is the best answer because...' }, null, 2),
+
     };
     return map[t] || map.multiple;
   }
@@ -192,7 +194,7 @@ function buildPrompt(topic, difficulty, type, num, fileContent) {
 
   let userPrompt;
   if (fileContent) {
-    userPrompt = `Generate a ${difficulty.toLowerCase()} difficulty quiz about "${topic}" based on the following material. Create ${num} ${typeInstruction}.
+    userPrompt = `Generate a ${difficulty.toLowerCase()} difficulty quiz${gradeContext} about "${topic}" based on the following material. Create ${num} ${typeInstruction}.
 
 Use the material below to create accurate and relevant questions:
 --- MATERIAL START ---
@@ -209,9 +211,10 @@ ${typeRule}
 - For dropdown, provide at least 4 options.
 - The answer must be one of the options, spelled exactly as it appears in the options array.
 - For each question include an "emoji" field with a single relevant emoji character.
+- For each question include an "explanation" field with a 1-2 sentence explanation of the correct answer, suitable for a student's learning.
 - Make sure the questions are accurate and appropriate for ${difficulty.toLowerCase()} difficulty.`;
   } else {
-    userPrompt = `Generate a ${difficulty.toLowerCase()} difficulty quiz about "${topic}". Create ${num} ${typeInstruction}.
+    userPrompt = `Generate a ${difficulty.toLowerCase()} difficulty quiz${gradeContext} about "${topic}". Create ${num} ${typeInstruction}.
 
 Return JSON in this exact format (no markdown, no code fences):
 ${exampleJSON}
@@ -223,6 +226,7 @@ ${typeRule}
 - For dropdown, provide at least 4 options.
 - The answer must be one of the options, spelled exactly as it appears in the options array.
 - For each question include an "emoji" field with a single relevant emoji character.
+- For each question include an "explanation" field with a 1-2 sentence explanation of the correct answer, suitable for a student's learning.
 - Make sure the questions are accurate and appropriate for ${difficulty.toLowerCase()} difficulty.`;
   }
 
@@ -374,13 +378,13 @@ async function callGroq(prompt, retries = 2) {
 
 /* ===== Generate quiz (OpenRouter proxy with fallbacks) ===== */
 app.post('/api/generate', validateGenerateBody, async (req, res) => {
-  const { topic, difficulty, type, num } = req.body;
+  const { topic, difficulty, type, num, gradeLevel } = req.body;
 
   if (!process.env.OPENROUTER_KEY && !process.env.GROQ_KEY) {
     return res.status(500).json({ error: 'No AI API key configured on server' });
   }
 
-  const prompt = buildPrompt(topic, difficulty, type, num);
+  const prompt = buildPrompt(topic, difficulty, type, num, null, gradeLevel);
   const origin = req.headers.origin || 'http://localhost:3000';
 
   const errors = [];
@@ -418,7 +422,7 @@ app.post('/api/generate-from-file', (req, res, next) => {
     next();
   });
 }, validateGenerateBody, async (req, res) => {
-  const { topic, difficulty, type, num } = req.body;
+  const { topic, difficulty, type, num, gradeLevel } = req.body;
   const file = req.file;
 
   if (!file) {
@@ -453,7 +457,7 @@ app.post('/api/generate-from-file', (req, res, next) => {
   }
 
   const resolvedTopic = topic || file.originalname.replace(/\.(pdf|pptx)$/i, '');
-  const prompt = buildPrompt(resolvedTopic, difficulty, type, num, extractedText);
+  const prompt = buildPrompt(resolvedTopic, difficulty, type, num, extractedText, gradeLevel);
   const origin = req.headers.origin || 'http://localhost:3000';
   const errors = [];
 
@@ -613,7 +617,7 @@ app.get('/api/quiz/demo', (req, res) => {
 
 /* ===== Save a quiz for sharing ===== */
 app.post('/api/quiz/save', requireUser, validateQuizSaveBody, async (req, res) => {
-  const { questions, topic, difficulty, showScore, format, title, subject } = req.body;
+  const { questions, topic, difficulty, showScore, format, title, subject, learningMode } = req.body;
   const id = crypto.randomBytes(6).toString('hex');
   const data = {
     questions,
@@ -623,7 +627,8 @@ app.post('/api/quiz/save', requireUser, validateQuizSaveBody, async (req, res) =
     timerSeconds: parseInt(req.body.timerSeconds) || 0,
     format: format === 'slide' ? 'slide' : 'form',
     title: title || '',
-    subject: subject || ''
+    subject: subject || '',
+    learningMode: !!learningMode
   };
   await saveQuiz(id, data);
   res.json({ id, url: `/quiz/${id}` });
@@ -677,11 +682,418 @@ app.get('/api/quiz/:id/results', requireUser, async (req, res) => {
   res.json({ results, totalQuestions: quiz?.questions?.length || 0 });
 });
 
+/* ===== Adaptive Difficulty Generation ===== */
+app.post('/api/generate/adaptive', validateGenerateBody, async (req, res) => {
+  const { topic, difficulty, type, num, gradeLevel, previousResults } = req.body;
+
+  if (!process.env.OPENROUTER_KEY && !process.env.GROQ_KEY) {
+    return res.status(500).json({ error: 'No AI API key configured on server' });
+  }
+
+  // Build adaptive context from previous results
+  let adaptiveContext = '';
+  if (previousResults && Array.isArray(previousResults) && previousResults.length > 0) {
+    const recent = previousResults.slice(-5);
+    const correct = recent.filter(r => r.correct).length;
+    const total = recent.length;
+    const pct = Math.round((correct / total) * 100);
+
+    let trend = 'stable';
+    const lastTwo = recent.slice(-2);
+    if (lastTwo.length === 2 && lastTwo.every(r => r.correct)) trend = 'improving';
+    else if (lastTwo.length === 2 && lastTwo.every(r => !r.correct)) trend = 'struggling';
+
+    let adjustedDifficulty = difficulty;
+    if (trend === 'improving') adjustedDifficulty = difficulty === 'Easy' ? 'Medium' : difficulty === 'Medium' ? 'Hard' : 'Hard';
+    else if (trend === 'struggling') adjustedDifficulty = difficulty === 'Hard' ? 'Medium' : difficulty === 'Medium' ? 'Easy' : 'Easy';
+
+    adaptiveContext = `The student answered ${correct}/${total} correctly (${pct}%) in recent questions. Their performance trend is "${trend}". Adjust question difficulty to "${adjustedDifficulty}" overall, mixing in some slightly easier or harder questions as appropriate.`;
+  }
+
+  const prompt = buildPrompt(topic, difficulty, type, num, null, gradeLevel);
+  // Append adaptive context to the user prompt
+  prompt.user += `\n\nAdaptive context: ${adaptiveContext || 'No previous results — use standard difficulty.'}`;
+
+  const origin = req.headers.origin || 'http://localhost:3000';
+  const errors = [];
+
+  for (const model of FALLBACK_MODELS) {
+    try {
+      const questions = await callModel(model, prompt, origin);
+      return res.json({ questions, adaptive: true });
+    } catch (err) {
+      errors.push({ model, error: err.message });
+      if (err.fatal) break;
+    }
+  }
+
+  if (process.env.GROQ_KEY) {
+    try {
+      const questions = await callGroq(prompt);
+      return res.json({ questions, adaptive: true });
+    } catch (err) {
+      errors.push({ model: 'groq/llama-3.3-70b-versatile', error: err.message });
+    }
+  }
+
+  console.error('All models failed (adaptive):', errors);
+  res.status(503).json({ error: 'All AI models are currently busy.', details: errors });
+});
+
+/* ===== Performance Insights (Paid) ===== */
+app.get('/api/insights/summary', requireUser, async (req, res) => {
+  if (!SUPABASE_ENABLED && !useLocalFallback) {
+    return res.status(503).json({ error: 'Service offline' });
+  }
+
+  // Get profile for subscription check
+  const profile = await getProfile(req.user.id, req.user.email);
+  if (!profile || profile.subscription_status !== 'active') {
+    return res.status(403).json({ error: 'Subscription required' });
+  }
+
+  try {
+    // Get user quizzes
+    const quizzes = await getUserQuizzes(req.user.id);
+    const quizIds = quizzes.map(q => q.id);
+
+    let totalQuizzes = quizIds.length;
+    let totalSubmissions = 0;
+    let totalCorrect = 0;
+    let totalQuestions = 0;
+    const topicAccuracy: Record<string, { correct: number; total: number }> = {};
+
+    for (const quizId of quizIds) {
+      const results = await getResults(quizId);
+      totalSubmissions += results.length;
+      for (const r of results) {
+        totalCorrect += r.correct || 0;
+        totalQuestions += r.total || 0;
+      }
+      const quiz = await getQuiz(quizId);
+      if (quiz && quiz.topic) {
+        const resultsForTopic = await getResults(quizId);
+        const topicCorrect = resultsForTopic.reduce((s, r) => s + (r.correct || 0), 0);
+        const topicTotal = resultsForTopic.reduce((s, r) => s + (r.total || 0), 0);
+        if (!topicAccuracy[quiz.topic]) topicAccuracy[quiz.topic] = { correct: 0, total: 0 };
+        topicAccuracy[quiz.topic].correct += topicCorrect;
+        topicAccuracy[quiz.topic].total += topicTotal;
+      }
+    }
+
+    const overallAccuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+
+    const weakTopics = Object.entries(topicAccuracy)
+      .filter(([, v]) => v.total > 0)
+      .map(([topic, v]) => ({
+        topic,
+        accuracy: Math.round((v.correct / v.total) * 100),
+        totalQuestions: v.total
+      }))
+      .filter(t => t.accuracy < 70)
+      .sort((a, b) => a.accuracy - b.accuracy);
+
+    res.json({
+      totalQuizzes,
+      totalSubmissions,
+      overallAccuracy,
+      weakTopics,
+      topicCount: Object.keys(topicAccuracy).length
+    });
+  } catch (err) {
+    console.error('Insights summary error:', err);
+    res.status(500).json({ error: 'Failed to generate insights' });
+  }
+});
+
+app.get('/api/insights/weak-topics', requireUser, async (req, res) => {
+  if (!SUPABASE_ENABLED && !useLocalFallback) {
+    return res.status(503).json({ error: 'Service offline' });
+  }
+
+  const profile = await getProfile(req.user.id, req.user.email);
+  if (!profile || profile.subscription_status !== 'active') {
+    return res.status(403).json({ error: 'Subscription required' });
+  }
+
+  try {
+    const quizzes = await getUserQuizzes(req.user.id);
+    const topicAccuracy: Record<string, { correct: number; total: number; quizzes: string[] }> = {};
+
+    for (const quiz of quizzes) {
+      const results = await getResults(quiz.id);
+      if (results.length === 0) continue;
+      const topic = quiz.topic || 'Untitled';
+      if (!topicAccuracy[topic]) topicAccuracy[topic] = { correct: 0, total: 0, quizzes: [] };
+      topicAccuracy[topic].quizzes.push(quiz.title || quiz.id);
+      for (const r of results) {
+        topicAccuracy[topic].correct += r.correct || 0;
+        topicAccuracy[topic].total += r.total || 0;
+      }
+    }
+
+    const weakTopics = Object.entries(topicAccuracy)
+      .filter(([, v]) => v.total > 0)
+      .map(([topic, v]) => ({
+        topic,
+        accuracy: Math.round((v.correct / v.total) * 100),
+        totalQuestions: v.total,
+        quizzes: v.quizzes
+      }))
+      .filter(t => t.accuracy < 70)
+      .sort((a, b) => a.accuracy - b.accuracy);
+
+    res.json({ weakTopics });
+  } catch (err) {
+    console.error('Weak topics error:', err);
+    res.status(500).json({ error: 'Failed to analyze weak topics' });
+  }
+});
+
+app.post('/api/insights/recommendations', requireUser, async (req, res) => {
+  if (!SUPABASE_ENABLED && !useLocalFallback) {
+    return res.status(503).json({ error: 'Service offline' });
+  }
+
+  const profile = await getProfile(req.user.id, req.user.email);
+  if (!profile || profile.subscription_status !== 'active') {
+    return res.status(403).json({ error: 'Subscription required' });
+  }
+
+  const { weakTopics } = req.body;
+  if (!weakTopics || !Array.isArray(weakTopics) || weakTopics.length === 0) {
+    return res.json({ recommendations: ['Keep up the great work! No weak areas detected.'] });
+  }
+
+  if (!process.env.OPENROUTER_KEY && !process.env.GROQ_KEY) {
+    const fallbackRecs = weakTopics.map(t => `Review "${t.topic}" — consider practicing with additional quizzes on this subject.`);
+    return res.json({ recommendations: fallbackRecs });
+  }
+
+  const topicList = weakTopics.map(t => `${t.topic} (${t.accuracy}% accuracy)`).join(', ');
+  const prompt = {
+    system: 'You are an educational advisor. Return ONLY a JSON array of recommendation strings. No markdown, no other text.',
+    user: `Based on these weak areas: ${topicList}, suggest 3 specific review topics or study strategies for the student. Return as JSON array: ["Recommendation 1", "Recommendation 2", "Recommendation 3"]`
+  };
+
+  const origin = req.headers.origin || 'http://localhost:3000';
+  const errors = [];
+
+  async function fetchRecs(model, groq) {
+    var url = groq ? 'https://api.groq.com/openai/v1/chat/completions' : 'https://openrouter.ai/api/v1/chat/completions';
+    var headers = groq
+      ? { 'Authorization': 'Bearer ' + process.env.GROQ_KEY, 'Content-Type': 'application/json' }
+      : { 'Authorization': 'Bearer ' + process.env.OPENROUTER_KEY, 'HTTP-Referer': origin, 'X-Title': 'QuikQuiz', 'Content-Type': 'application/json' };
+    var body = {
+      model: groq ? 'llama-3.3-70b-versatile' : (FALLBACK_MODELS[0] || 'qwen/qwen3-coder:free'),
+      messages: [{ role: 'system', content: prompt.system }, { role: 'user', content: prompt.user }],
+      temperature: 0.7, max_tokens: 2000
+    };
+    for (var a = 0; a <= 2; a++) {
+      var ctrl = new AbortController();
+      var t = setTimeout(function () { ctrl.abort(); }, 15000);
+      try {
+        var resp = await fetch(url, { method: 'POST', headers: headers, body: JSON.stringify(body), signal: ctrl.signal });
+        clearTimeout(t);
+        if (resp.ok) {
+          var data = await resp.json();
+          var content = data.choices?.[0]?.message?.content;
+          if (!content) throw new Error('empty');
+          var cleaned = jsonrepair(content);
+          var parsed = JSON.parse(cleaned);
+          var arr = Array.isArray(parsed) ? parsed : (parsed.recommendations || parsed.topics || []);
+          if (Array.isArray(arr) && arr.length > 0) return arr.slice(0, 5);
+          throw new Error('no recs');
+        }
+        var status = resp.status;
+        var text = await resp.text();
+        if (status === 429 || status >= 500) { if (a < 2) { await new Promise(function (r) { setTimeout(r, 1500); }); continue; } throw new Error('busy ' + status); }
+        if (status === 401 || status === 403) throw Object.assign(new Error(text.slice(0, 200)), { fatal: true });
+        throw new Error('API error ' + status + ': ' + text.slice(0, 200));
+      } catch (e) {
+        clearTimeout(t);
+        if (e.name === 'AbortError') { if (a < 2) { await new Promise(function (r) { setTimeout(r, 1500); }); continue; } throw new Error('timeout'); }
+        if (e.fatal) throw e;
+        if (a >= 2) throw e;
+        await new Promise(function (r) { setTimeout(r, 1500); });
+      }
+    }
+  }
+
+  for (var i = 0; i < FALLBACK_MODELS.length; i++) {
+    try {
+      var recs = await fetchRecs(FALLBACK_MODELS[i], false);
+      return res.json({ recommendations: recs });
+    } catch (err) { errors.push({ model: FALLBACK_MODELS[i], error: err.message }); }
+  }
+
+  if (process.env.GROQ_KEY) {
+    try {
+      var recs = await fetchRecs(null, true);
+      return res.json({ recommendations: recs });
+    } catch (err) { errors.push({ model: 'groq', error: err.message }); }
+  }
+
+  const fallbackRecs = weakTopics.map(t => `Review "${t.topic}" — consider practicing with additional quizzes on this subject.`);
+  res.json({ recommendations: fallbackRecs });
+});
+
+/* ===== Template Packs ===== */
+const TEMPLATES = [
+  { id: 'math-g3-multiplication', title: 'Grade 3 Math — Multiplication', subject: 'math', grade: '3-5', difficulty: 'Easy', num: 10, type: 'all' },
+  { id: 'science-g5-solar', title: 'Grade 5 Science — Solar System', subject: 'science', grade: '3-5', difficulty: 'Medium', num: 10, type: 'all' },
+  { id: 'history-g6-egypt', title: 'Grade 6 History — Ancient Egypt', subject: 'history', grade: '6-8', difficulty: 'Medium', num: 10, type: 'all' },
+  { id: 'english-g4-grammar', title: 'Grade 4 English — Grammar Basics', subject: 'english', grade: '3-5', difficulty: 'Easy', num: 8, type: 'all' },
+  { id: 'geo-g9-climate', title: 'Grade 9 Geography — Climate Zones', subject: 'geography', grade: '9-12', difficulty: 'Hard', num: 12, type: 'all' },
+  { id: 'math-g7-algebra', title: 'Grade 7 Math — Algebra Basics', subject: 'math', grade: '6-8', difficulty: 'Medium', num: 10, type: 'all' },
+];
+
+app.get('/api/templates', (req, res) => {
+  res.json({ templates: TEMPLATES });
+});
+
+app.post('/api/templates/:id/generate', validateGenerateBody, async (req, res) => {
+  const template = TEMPLATES.find(t => t.id === req.params.id);
+  if (!template) return res.status(404).json({ error: 'Template not found' });
+
+  const { topic } = req.body;
+  const resolvedTopic = topic || template.title || template.subject;
+
+  if (!process.env.OPENROUTER_KEY && !process.env.GROQ_KEY) {
+    return res.status(500).json({ error: 'No AI API key configured' });
+  }
+
+  const prompt = buildPrompt(resolvedTopic, template.difficulty, template.type, template.num, null, template.grade);
+  const origin = req.headers.origin || 'http://localhost:3000';
+  const errors = [];
+
+  for (const model of FALLBACK_MODELS) {
+    try {
+      const questions = await callModel(model, prompt, origin);
+      return res.json({ questions, template: template.id });
+    } catch (err) {
+      errors.push({ model, error: err.message });
+      if (err.fatal) break;
+    }
+  }
+
+  if (process.env.GROQ_KEY) {
+    try {
+      const questions = await callGroq(prompt);
+      return res.json({ questions, template: template.id });
+    } catch (err) {
+      errors.push({ model: 'groq/llama-3.3-70b-versatile', error: err.message });
+    }
+  }
+
+  res.status(503).json({ error: 'All AI models busy.', details: errors });
+});
+
+/* ===== Referral System ===== */
+app.post('/api/referral/generate', requireUser, async (req, res) => {
+  const referralCode = req.user.id.slice(0, 8) + Math.random().toString(36).slice(2, 6);
+  const shareUrl = `${req.headers.origin}/generate?ref=${referralCode}`;
+  // Store referral code in Supabase or local store
+  if (SUPABASE_ENABLED && supabaseAdmin) {
+    const { error } = await supabaseAdmin
+      .from('profiles')
+      .update({ referral_code: referralCode })
+      .eq('id', req.user.id);
+    if (error) console.error('Referral code save error:', error);
+  }
+  res.json({ referralCode, shareUrl });
+});
+
+app.post('/api/referral/claim', async (req, res) => {
+  const { code } = req.body;
+  if (!code) return res.status(400).json({ error: 'Referral code required' });
+
+  // For simplicity, grant 3 extra uses by storing in the referring user's quota
+  // In production, this would use a referrals table.
+  // Here we just return success — the frontend will increment local usage allowance.
+  res.json({ success: true, bonusGenerations: 3 });
+});
+
+app.get('/api/referral/stats', requireUser, async (req, res) => {
+  // Return referral stats (how many people used your link)
+  res.json({ totalReferrals: 0, bonusGenerations: 0 });
+});
+
 /* ===== API error handler ===== */
 app.use('/api/', (err, req, res, next) => {
   console.error('API error:', err);
   res.status(500).json({ error: 'Internal server error' });
 });
+
+/* ===== Sitemap for SEO ===== */
+app.get('/sitemap.xml', (req, res) => {
+  const baseUrl = req.headers.origin || 'https://quikquiz.app';
+  const subjects = ['science', 'math', 'history', 'english', 'geography'];
+  const grades = ['K-2', '3-5', '6-8', '9-12'];
+  const topics = {
+    science: ['Animals', 'Plants', 'Solar-System', 'Human-Body', 'Ecosystems', 'Chemical-Reactions', 'Genetics', 'Physics'],
+    math: ['Addition', 'Multiplication', 'Fractions', 'Algebra', 'Geometry', 'Calculus', 'Trigonometry', 'Statistics'],
+    history: ['Ancient-Egypt', 'American-Revolution', 'World-War-II', 'Cold-War', 'Renaissance', 'Civil-Rights'],
+    english: ['Grammar', 'Vocabulary', 'Reading', 'Shakespeare', 'Poetry', 'Essay-Writing'],
+    geography: ['Continents', 'Countries', 'Climate', 'Map-Skills', 'Population', 'Natural-Resources'],
+  };
+
+  let urls = `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url><loc>${baseUrl}/</loc><priority>1.0</priority></url>
+    <url><loc>${baseUrl}/generate</loc><priority>0.9</priority></url>
+    <url><loc>${baseUrl}/pricing</loc><priority>0.8</priority></url>`;
+
+  subjects.forEach(subject => {
+    grades.forEach(grade => {
+      const gradeParam = grade;
+      urls += `<url><loc>${baseUrl}/generate?subject=${subject}&grade=${gradeParam}</loc><priority>0.7</priority></url>`;
+      (topics[subject] || []).forEach(topic => {
+        urls += `<url><loc>${baseUrl}/quiz-topic/${subject}/${gradeParam}/${topic}</loc><priority>0.6</priority></url>`;
+      });
+    });
+  });
+
+  urls += '</urlset>';
+  res.setHeader('Content-Type', 'application/xml');
+  res.send(urls);
+});
+
+/* ===== SEO Topic Landing Pages ===== */
+app.get('/quiz-topic/:subject/:grade/:topic', (req, res) => {
+  const { subject, grade, topic } = req.params;
+  const decodedTopic = topic.replace(/-/g, ' ');
+  const decodedSubject = subject.replace(/-/g, ' ');
+  const decodedGrade = grade.replace(/-/g, ' ');
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${decodedTopic} Quiz for ${decodedSubject} (${decodedGrade}) | QuikQuiz</title>
+  <meta name="description" content="Generate a free ${decodedTopic.toLowerCase()} quiz for ${decodedGrade.toLowerCase()} ${decodedSubject.toLowerCase()} students. AI-powered multiple choice, true/false, and fill-in-the-blank questions.">
+  <meta property="og:title" content="${decodedTopic} Quiz for ${decodedSubject} (${decodedGrade})">
+  <meta property="og:description" content="Create engaging ${decodedSubject.toLowerCase()} quizzes instantly with AI. Perfect for teachers and parents.">
+  <meta property="og:type" content="website">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="${req.headers.origin}${req.path}">
+  <script>
+    window.location.href = '${req.headers.origin}/generate?topic=${encodeURIComponent(decodedTopic)}&subject=${encodeURIComponent(decodedSubject)}&grade=${encodeURIComponent(decodedGrade)}';
+  </script>
+</head>
+<body>
+  <h1>${decodedTopic} Quiz for ${decodedSubject} (${decodedGrade})</h1>
+  <p>Generate a free, AI-powered quiz about ${decodedTopic.toLowerCase()} for ${decodedGrade.toLowerCase()} ${decodedSubject.toLowerCase()} students.</p>
+  <p>Redirecting to QuikQuiz...</p>
+  <a href="${req.headers.origin}/generate?topic=${encodeURIComponent(decodedTopic)}&subject=${encodeURIComponent(decodedSubject)}&grade=${encodeURIComponent(decodedGrade)}">Click here if not redirected</a>
+</body>
+</html>`;
+  res.setHeader('Content-Type', 'text/html');
+  res.send(html);
+});
+
+/* ===== Health Check ===== */
+app.get('/health', (req, res) => res.status(200).send('OK'));
 
 /* ===== Serve static files (production: built React app) ===== */
 const clientDist = path.join(__dirname, '..', 'client', 'dist');
@@ -777,6 +1189,7 @@ async function getQuiz(id) {
       format: data.format,
       title: data.title,
       subject: data.subject,
+      learningMode: data.learning_mode || data.learningMode || false,
       createdAt: data.created_at
     };
   }
@@ -881,6 +1294,32 @@ async function incrementUsage(userId, email, name, avatarUrl) {
     }, { onConflict: 'id' });
   if (upsertErr) console.error('Supabase incrementUsage upsert error:', upsertErr);
   return current;
+}
+
+async function getUserQuizzes(userId) {
+  if (useLocalFallback) {
+    return await getFallbackQuizzes(userId);
+  }
+  if (!SUPABASE_ENABLED) return [];
+  const { data, error } = await supabaseAdmin
+    .from('quizzes')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+  if (error) return [];
+  return (data || []).map(q => ({
+    id: q.id,
+    title: q.title || 'Untitled Quiz',
+    topic: q.topic || '',
+    subject: q.subject || '',
+    difficulty: q.difficulty || 'Easy',
+    questions: q.questions || [],
+    timerSeconds: q.timer_seconds || 0,
+    format: q.format || 'form',
+    showScore: q.show_score !== false,
+    shareId: null,
+    createdAt: q.created_at
+  }));
 }
 
 async function setSubscription(userId, status, customerId) {

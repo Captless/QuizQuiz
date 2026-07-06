@@ -250,9 +250,9 @@ export default function StudentPage() {
         )}
       </main>
 
-      <footer style={{ textAlign: 'center', padding: '24px 16px', fontSize: '13px', color: 'var(--text-muted)', borderTop: 'var(--border-width, 0.63px) solid var(--border)' }}>
+      <footer style={{ textAlign: 'center', padding: '16px', fontSize: '12px', color: 'var(--text-muted)', borderTop: 'var(--border-width, 0.63px) solid var(--border)' }}>
         <div className="main-container" style={{ padding: '0' }}>
-          QuikQuiz — AI-powered quiz generation for teachers and tutors.
+          Powered by <strong>QuikQuiz</strong> — quikquiz.app
         </div>
       </footer>
     </>

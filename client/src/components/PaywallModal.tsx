@@ -20,7 +20,7 @@ export default function PaywallModal({ open, onClose, onDevSubscribe }: Props) {
   return (
     <div className={`paywall-overlay ${open ? 'active' : ''}`} onClick={onClose}>
       <div className="paywall-modal" onClick={e => e.stopPropagation()}>
-        <div className="paywall-price">$9<span>/mo</span></div>
+        <div className="paywall-price">$6.99<span>/mo</span></div>
         <div className="paywall-period">Unlimited access</div>
         <h2 className="card-title" style={{ fontSize: '24px', marginBottom: '8px' }}>Upgrade to QuikQuiz Pro</h2>
         <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '24px' }}>Your free demo quota has been used. Upgrade to unlock unlimited quiz generation, PDF export, and advanced features.</p>

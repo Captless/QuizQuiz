@@ -11,7 +11,8 @@ export async function generateQuiz(
   difficulty: string,
   type: string,
   num: number,
-  file?: File
+  file?: File,
+  gradeLevel?: string
 ): Promise<any[]> {
   let url = '/api/generate'
   let body: any
@@ -24,16 +25,37 @@ export async function generateQuiz(
     fd.append('difficulty', difficulty)
     fd.append('type', type)
     fd.append('num', String(num))
+    if (gradeLevel) fd.append('gradeLevel', gradeLevel)
     url = '/api/generate-from-file'
     body = fd
   } else {
     headers['Content-Type'] = 'application/json'
-    body = JSON.stringify({ topic, difficulty, type, num })
+    body = JSON.stringify({ topic, difficulty, type, num, gradeLevel })
   }
 
   const res = await fetch(url, { method: 'POST', headers, body })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Failed to generate quiz')
+  if (!data.questions?.length) throw new Error('No questions returned')
+  return data.questions
+}
+
+export async function generateAdaptiveQuiz(
+  topic: string,
+  difficulty: string,
+  type: string,
+  num: number,
+  gradeLevel?: string,
+  previousResults?: { correct: boolean; difficulty: string }[]
+): Promise<any[]> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', ...await authHeaders() }
+  const res = await fetch('/api/generate/adaptive', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ topic, difficulty, type, num, gradeLevel, previousResults })
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Failed to generate adaptive quiz')
   if (!data.questions?.length) throw new Error('No questions returned')
   return data.questions
 }
