@@ -1,7 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from './useAuth'
+import { supabase } from '../services/supabase'
 import { getQuizzes, saveQuizToServer, deleteQuizFromServer } from '../services/api'
 import type { QuizEntry } from '../types'
+
+async function authHeaders(): Promise<Record<string, string>> {
+  const { data } = await supabase.auth.getSession()
+  const token = data?.session?.access_token
+  return token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' }
+}
 
 export function useSavedQuizzes() {
   const { user } = useAuth()
@@ -28,7 +35,7 @@ export function useSavedQuizzes() {
         timerSeconds: q.timer_seconds ?? q.timerSeconds ?? 0,
         format: 'form',
         studentFormat: q.format || 'form',
-        shareId: q.shareId ?? null,
+        shareId: q.id,
         showScore: q.show_score ?? q.showScore ?? false,
       }))
       setQuizzes(entries)
@@ -46,7 +53,7 @@ export function useSavedQuizzes() {
   const addQuiz = useCallback(async (entry: QuizEntry) => {
     setQuizzes(prev => [entry, ...prev])
     try {
-      await saveQuizToServer({
+      const serverId = await saveQuizToServer({
         title: entry.title,
         topic: entry.topic,
         subject: entry.subject,
@@ -55,6 +62,7 @@ export function useSavedQuizzes() {
         timerSeconds: entry.timerSeconds,
         format: entry.studentFormat,
       })
+      setQuizzes(prev => prev.map(q => q.id === entry.id ? { ...q, id: serverId, shareId: serverId } : q))
     } catch (err: any) {
       console.error('Failed to persist quiz:', err)
     }
@@ -69,8 +77,13 @@ export function useSavedQuizzes() {
     }
   }, [])
 
-  const updateQuiz = useCallback((id: string, updates: Partial<QuizEntry>) => {
+  const updateQuiz = useCallback(async (id: string, updates: Partial<QuizEntry>) => {
     setQuizzes(prev => prev.map(q => q.id === id ? { ...q, ...updates } : q))
+    try {
+      await fetch(`/api/quiz/${id}`, { method: 'PUT', headers: await authHeaders(), body: JSON.stringify(updates) })
+    } catch (err: any) {
+      console.error('Failed to persist quiz update:', err)
+    }
   }, [])
 
   return { quizzes, loading, error, addQuiz, deleteQuiz, updateQuiz }

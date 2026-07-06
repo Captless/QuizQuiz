@@ -22,20 +22,9 @@ export function useAuth() {
     try {
       const u = await getUsage()
       if (!u) return
-
-      // Read the current usage from localStorage to avoid stale closures
-      // (refreshUsage may be called much later after a token refresh).
-      const currentUsage = parseInt(localStorage.getItem('quikquiz_usage') || '0', 10)
-
-      // Only overwrite if the server value is strictly greater than the local value,
-      // or the user is now paid (paid status is always authoritative).
-      const shouldUpdate = u.paid || u.usageCount > currentUsage
-
-      if (shouldUpdate) {
-        setUsageCount(u.usageCount)
-        localStorage.setItem('quikquiz_usage', String(u.usageCount))
-      }
+      setUsageCount(u.usageCount)
       setPaid(u.paid)
+      localStorage.setItem('quikquiz_usage', String(u.usageCount))
       localStorage.setItem('quikquiz_paid', u.paid ? 'true' : 'false')
     } catch (err) {
       console.warn('Failed to sync usage from server:', err)
@@ -98,19 +87,15 @@ export function useAuth() {
   }
 
   const incrementUsage = async (): Promise<void> => {
-    const prev = parseInt(localStorage.getItem('quikquiz_usage') || '0', 10)
-    const next = prev + 1
-    setUsageCount(next)
-    localStorage.setItem('quikquiz_usage', String(next))
     try {
       const serverCount = await apiIncrementUsage()
-      const reconciled = Math.max(serverCount, next)
-      if (reconciled !== next) {
-        setUsageCount(reconciled)
-        localStorage.setItem('quikquiz_usage', String(reconciled))
-      }
+      setUsageCount(serverCount)
+      localStorage.setItem('quikquiz_usage', String(serverCount))
     } catch {
-      // Server sync failed — local count is already correct for this session
+      const prev = parseInt(localStorage.getItem('quikquiz_usage') || '0', 10)
+      const next = prev + 1
+      setUsageCount(next)
+      localStorage.setItem('quikquiz_usage', String(next))
     }
   }
 

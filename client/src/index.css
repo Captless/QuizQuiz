@@ -1238,22 +1238,18 @@ header {
 .text-muted { color: var(--text-muted); font-size: 13px; }
 .results-modal > .score-stats { padding: 0 24px; }
 
-/* ===== Share URL Row ===== */
-.share-url-row {
-  display: flex; align-items: center; gap: 6px;
-  padding: 8px 18px 12px;
-  background: var(--bg-body);
-  border-bottom: var(--border-width, 0.63px) solid var(--border);
+/* ===== Share Inline ===== */
+.share-inline {
+  display: inline-flex; align-items: center; gap: 4px; cursor: pointer;
+  padding: 2px 8px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); background: var(--bg-card);
+  transition: all var(--transition); white-space: nowrap;
+  user-select: none;
 }
-.share-url-input {
-  flex: 1; padding: 6px 10px; font-size: 12px; font-family: var(--font-mono);
-  border: 1px solid var(--border); border-radius: var(--radius-sm);
-  background: var(--bg-input); color: var(--text-primary);
-  cursor: text; outline: none;
-}
-.share-url-input:focus { border-color: var(--accent); }
-.share-copy-btn { padding: 4px 10px !important; line-height: 1 !important; min-width: 0 !important; }
-.share-copy-btn svg { display: block; }
+.share-inline:hover { border-color: var(--accent); background: var(--accent-light); }
+.share-inline-text { font-size: 11px; color: var(--accent); font-weight: 600; line-height: 1.6; }
+.share-inline .share-copy-btn { display: inline-flex; align-items: center; color: var(--text-secondary); }
+.share-inline:hover .share-copy-btn { color: var(--accent); }
 
 /* ===== Quiz Count Badge ===== */
 .quiz-count-badge {

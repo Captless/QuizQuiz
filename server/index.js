@@ -378,8 +378,15 @@ async function callGroq(prompt, retries = 2) {
 }
 
 /* ===== Generate quiz (OpenRouter proxy with fallbacks) ===== */
-app.post('/api/generate', validateGenerateBody, async (req, res) => {
+app.post('/api/generate', requireUser, validateGenerateBody, async (req, res) => {
   const { topic, difficulty, type, num, gradeLevel } = req.body;
+
+  // Server-side quota enforcement
+  const profile = await getProfile(req.user.id, req.user.email);
+  const isPaid = profile?.subscription_status === 'active';
+  if (!isPaid && (profile?.usage_count || 0) >= 3) {
+    return res.status(403).json({ error: 'Free limit reached. Upgrade to Pro to generate more quizzes.', needsUpgrade: true, usageCount: profile?.usage_count || 0 });
+  }
 
   if (!process.env.OPENROUTER_KEY && !process.env.GROQ_KEY) {
     return res.status(500).json({ error: 'No AI API key configured on server' });
@@ -417,7 +424,7 @@ app.post('/api/generate', validateGenerateBody, async (req, res) => {
 });
 
 /* ===== Generate from uploaded file ===== */
-app.post('/api/generate-from-file', (req, res, next) => {
+app.post('/api/generate-from-file', requireUser, (req, res, next) => {
   upload.single('file')(req, res, (err) => {
     if (err) return res.status(400).json({ error: 'Upload error: ' + err.message });
     next();
@@ -425,6 +432,18 @@ app.post('/api/generate-from-file', (req, res, next) => {
 }, validateGenerateBody, async (req, res) => {
   const { topic, difficulty, type, num, gradeLevel } = req.body;
   const file = req.file;
+
+  // Server-side quota enforcement
+  const profile = await getProfile(req.user.id, req.user.email);
+  const isPaid = profile?.subscription_status === 'active';
+  if (!isPaid && (profile?.usage_count || 0) >= 3) {
+    if (file) fs.unlinkSync(file.path);
+    return res.status(403).json({ error: 'Free limit reached. Upgrade to Pro to generate more quizzes.', needsUpgrade: true, usageCount: profile?.usage_count || 0 });
+  }
+  if (!isPaid) {
+    if (file) fs.unlinkSync(file.path);
+    return res.status(403).json({ error: 'File upload requires Pro.', needsUpgrade: true });
+  }
 
   if (!file) {
     return res.status(400).json({ error: 'No file uploaded' });

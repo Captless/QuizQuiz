@@ -75,30 +75,29 @@ function QuizEntryCard({ entry, expanded, onToggle, onDelete, onUpdate, onShare,
 }) {
   const [title, setTitle] = useState(entry.title)
   const [editing, setEditing] = useState(false)
-  const [showUrl, setShowUrl] = useState(false)
-  const [copied, setCopied] = useState(false)
+  const [copyFeedback, setCopyFeedback] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
-  const urlRef = useRef<HTMLInputElement>(null)
-  const shareUrl = entry.shareId ? `${window.location.origin}/quiz/${entry.shareId}` : ''
 
   const finishTitle = () => {
     setEditing(false)
     if (title.trim() && title !== entry.title) onUpdate({ title: title.trim() })
   }
 
-  const handleCopyUrl = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (!shareUrl) return
-    try {
-      await navigator.clipboard.writeText(shareUrl)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      urlRef.current?.select()
+  const handleCopy = async () => {
+    if (entry.shareId) {
+      try {
+        await navigator.clipboard.writeText(`${window.location.origin}/quiz/${entry.shareId}`)
+        setCopyFeedback(true)
+        setTimeout(() => setCopyFeedback(false), 1500)
+      } catch { }
+    } else {
+      await onShare()
     }
   }
 
   const diffClass = entry.difficulty === 'Easy' ? 'tag-multiple' : entry.difficulty === 'Medium' ? 'tag-truefalse' : ''
+
+  const displayTitle = entry.title.slice(0, 10) + (entry.title.length > 10 ? '…' : '')
 
   return (
     <div className="quiz-entry card">
@@ -125,22 +124,19 @@ function QuizEntryCard({ entry, expanded, onToggle, onDelete, onUpdate, onShare,
             <span className="score-icon">{entry.showScore ? '✓' : '✗'}</span> Score
           </button>
           <button className="btn btn-sm btn-outline action-btn" type="button" title="View results" aria-label={`View results for ${entry.title}`} onClick={e => { e.stopPropagation(); onResults() }}>Results</button>
-          <button className={`btn btn-sm action-btn ${showUrl ? 'btn-primary' : 'btn-outline'}`} type="button" title="Share quiz" aria-label={`Share ${entry.title}`} onClick={async e => { e.stopPropagation(); if (!entry.shareId) await onShare(); setShowUrl(v => !v) }}>{showUrl ? 'Close' : 'Share'}</button>
+          <span className="share-inline" title="Copy quiz link" onClick={async e => { e.stopPropagation(); await handleCopy() }}>
+            <span className="share-inline-text">{displayTitle}</span>
+            <span className="share-copy-btn" style={{ fontSize: '13px', lineHeight: 1 }}>
+              {copyFeedback ? (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+              )}
+            </span>
+          </span>
           <span className="entry-toggle" onClick={e => { e.stopPropagation(); onToggle() }} title={expanded ? 'Collapse' : 'Expand'}>{expanded ? '▼' : '▶'}</span>
         </div>
       </div>
-      {showUrl && shareUrl && (
-        <div className="share-url-row" onClick={e => e.stopPropagation()}>
-          <input ref={urlRef} type="text" value={shareUrl} readOnly className="share-url-input" onClick={e => (e.target as HTMLInputElement).select()} />
-          <button onClick={handleCopyUrl} className="btn btn-sm action-btn share-copy-btn" title="Copy URL">
-            {copied ? (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-            ) : (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
-            )}
-          </button>
-        </div>
-      )}
 
       <div className={`quiz-entry-body ${expanded ? '' : 'hidden'}`}>
         <div className="quiz-entry-content">
