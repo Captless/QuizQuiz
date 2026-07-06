@@ -19,6 +19,26 @@ describe('validateGenerateBody', () => {
     expect(res.status).not.toHaveBeenCalled()
   })
 
+  it('passes with comma-separated types', () => {
+    const { req, res, next } = mockReqRes({ topic: 'Science', difficulty: 'Medium', type: 'multiple,truefalse', num: 8 })
+    validateGenerateBody(req, res, next)
+    expect(next).toHaveBeenCalled()
+    expect(res.status).not.toHaveBeenCalled()
+  })
+
+  it('passes with "all" type', () => {
+    const { req, res, next } = mockReqRes({ topic: 'History', difficulty: 'Hard', type: 'all', num: 10 })
+    validateGenerateBody(req, res, next)
+    expect(next).toHaveBeenCalled()
+    expect(res.status).not.toHaveBeenCalled()
+  })
+
+  it('rejects invalid type', () => {
+    const { req, res, next } = mockReqRes({ topic: 'Math', difficulty: 'Easy', type: 'invalid', num: 5 })
+    validateGenerateBody(req, res, next)
+    expect(res.status).toHaveBeenCalledWith(400)
+  })
+
   it('rejects missing topic', () => {
     const { req, res, next } = mockReqRes({ difficulty: 'Easy', type: 'multiple', num: 5 })
     validateGenerateBody(req, res, next)

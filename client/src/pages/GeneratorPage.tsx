@@ -176,7 +176,7 @@ export default function GeneratorPage() {
           ...q,
           shuffledOptions: [...q.options].sort(() => Math.random() - 0.5),
         })),
-        timerSeconds,
+        timerSeconds: timerEnabled ? timerSeconds : 0,
         format: 'form',
         studentFormat: format,
         shareId: null,

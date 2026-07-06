@@ -1,5 +1,4 @@
 const VALID_DIFFICULTIES = ['Easy', 'Medium', 'Hard'];
-const VALID_TYPES = ['multiple', 'truefalse', 'dropdown', 'all'];
 const VALID_FORMATS = ['form', 'slide'];
 
 function validateGenerateBody(req, res, next) {
@@ -14,8 +13,13 @@ function validateGenerateBody(req, res, next) {
     errors.push('difficulty must be Easy, Medium, or Hard');
   }
 
-  if (!type || !VALID_TYPES.includes(type)) {
-    errors.push('type must be one of: multiple, truefalse, dropdown, all');
+  if (!type) {
+    errors.push('type is required');
+  } else {
+    const selectedTypes = type === 'all' ? ['multiple', 'truefalse', 'dropdown'] : type.split(',');
+    if (!selectedTypes.every(t => ['multiple', 'truefalse', 'dropdown'].includes(t))) {
+      errors.push('type must be one or more of: multiple, truefalse, dropdown');
+    }
   }
 
   const numVal = Number(num);
