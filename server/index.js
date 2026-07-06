@@ -1271,18 +1271,19 @@ async function incrementUsage(userId, email, name, avatarUrl) {
     return await incFallbackUsage(email || userId);
   }
   if (!SUPABASE_ENABLED) return 0;
-  // Use the atomic Postgres function defined in the schema, which does:
-  //   UPDATE profiles SET usage_count = usage_count + 1 WHERE id = user_id RETURNING usage_count
+  // Try the atomic Postgres function: UPDATE profiles SET usage_count = usage_count + 1 WHERE id = user_id RETURNING usage_count
   const { data, error } = await supabaseAdmin.rpc('increment_usage', { user_id: userId });
+  console.log('[usage] RPC result:', { data, error: error?.message || null });
   if (!error && data != null) return data;
-  if (error) console.error('Supabase incrementUsage RPC error:', error);
-  // Fallback: upsert directly (handles missing profile row or missing function)
+  if (error) console.error('[usage] RPC error:', error);
+  // Fallback: upsert directly
   const { data: profile } = await supabaseAdmin
     .from('profiles')
     .select('usage_count, subscription_status')
     .eq('id', userId)
     .maybeSingle();
-  const current = ((profile?.usage_count) || 0) + 1;
+  console.log('[usage] fallback select:', profile);
+  const current = ((profile?.usage_count) ?? 0) + 1;
   const { error: upsertErr } = await supabaseAdmin
     .from('profiles')
     .upsert({
@@ -1293,7 +1294,8 @@ async function incrementUsage(userId, email, name, avatarUrl) {
       usage_count: current,
       subscription_status: profile?.subscription_status || 'inactive'
     }, { onConflict: 'id' });
-  if (upsertErr) console.error('Supabase incrementUsage upsert error:', upsertErr);
+  if (upsertErr) console.error('[usage] fallback upsert error:', upsertErr);
+  console.log('[usage] returning current:', current);
   return current;
 }
 
@@ -1379,7 +1381,9 @@ app.get('/api/usage', requireUser, async (req, res) => {
       .select()
       .single();
     if (!error) profile = data;
+    else console.error('[usage] upsert error in GET /api/usage:', error);
   }
+  console.log('[usage] GET /api/usage returning:', { usageCount: profile?.usage_count, paid: profile?.subscription_status });
   res.json({ usageCount: profile?.usage_count || 0, paid: profile?.subscription_status === 'active' });
 });
 

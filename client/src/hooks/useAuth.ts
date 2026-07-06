@@ -81,8 +81,6 @@ export function useAuth() {
         refreshUsage()
       } else {
         localStorage.removeItem('quikquiz_user')
-        localStorage.removeItem('quikquiz_paid')
-        localStorage.removeItem('quikquiz_usage')
         setPaid(false)
         setUsageCount(0)
       }
