@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useSavedQuizzes } from '../hooks/useSavedQuizzes'
-import { useScrollReveal } from '../hooks/useScrollReveal'
 import {
   generateQuiz as apiGenerate,
   createCheckoutSession,
@@ -62,10 +61,10 @@ const FAQS = [
 ]
 
 export default function GeneratorPage() {
-  const { user, loading: authLoading, signIn, signOut, incrementUsage, setPaidStatus, paid: isPaid, usageCount } = useAuth()
+  const { user, loading: authLoading, signIn, signOut, incrementUsage, setPaidStatus, paid: isPaid, usageCount, refreshUsage } = useAuth()
   const remainingFree = Math.max(0, 3 - usageCount)
   const outOfFreeQuota = !isPaid && usageCount >= 3
-  const { quizzes, loading: quizzesLoading, addQuiz, deleteQuiz, updateQuiz } = useSavedQuizzes()
+  const { quizzes, loading: quizzesLoading, addQuiz, deleteQuiz, updateQuiz, refreshQuizzes } = useSavedQuizzes()
 
   const [subject, setSubject] = useState('')
   const [grade, setGrade] = useState('')
@@ -103,8 +102,6 @@ export default function GeneratorPage() {
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
-
-  useScrollReveal()
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -186,9 +183,13 @@ export default function GeneratorPage() {
 
       if (!isPaid) {
         await incrementUsage()
+        await refreshUsage()
       }
 
       await addQuiz(entry)
+      setQuizzesVisible(true)
+      document.querySelector('.quiz-stack-section')?.scrollIntoView({ behavior: 'smooth' })
+      await refreshQuizzes()
       addToast(isPaid ? 'Quiz generated successfully!' : 'Free demo quiz generated! Upgrade to unlock unlimited.', 'success')
     } catch (err: any) {
       addToast(err.message || 'Failed to generate quiz.', 'error')
@@ -197,7 +198,7 @@ export default function GeneratorPage() {
       setGenerating(false)
       setGenProgress('')
     }
-  }, [generating, user, signIn, outOfFreeQuota, isPaid, topic, file, difficulty, num, format, types, timerSeconds, subject, quizzes.length, addQuiz, incrementUsage])
+  }, [generating, user, signIn, outOfFreeQuota, isPaid, topic, file, difficulty, num, format, types, timerSeconds, subject, quizzes.length, addQuiz, incrementUsage, refreshUsage, refreshQuizzes])
 
   const handleShare = useCallback(async (entry: QuizEntry) => {
     try {
@@ -343,7 +344,7 @@ export default function GeneratorPage() {
       {/* Main */}
       <main className="main-container">
         {/* Hero */}
-        <section className="hero reveal reveal-card">
+        <section className="hero">
           <div className="hero-bg">
             <div className="blob blob-1" />
             <div className="blob blob-2" />
@@ -383,7 +384,7 @@ export default function GeneratorPage() {
         </section>
 
         {/* Stepper / How it Works */}
-        <section className="section-how reveal reveal-card">
+        <section className="section-how">
           <h2 className="section-title">How QuikQuiz Works</h2>
           <div className="stepper-wrapper">
             <div className="stepper">
@@ -400,7 +401,7 @@ export default function GeneratorPage() {
         </section>
 
         {/* Generator Form */}
-        <section id="generatorSection" className={`card reveal reveal-card ${!isPaid && user ? 'demo-mode' : ''}`}>
+        <section id="generatorSection" className={`card ${!isPaid && user ? 'demo-mode' : ''}`}>
           <h2 className="card-title">Create Your Quiz</h2>
 
           {!user && (
@@ -507,7 +508,7 @@ export default function GeneratorPage() {
         </section>
 
         {/* Saved Quizzes */}
-        {user && <section className="card reveal reveal-card quiz-stack-section">
+        {user && <section className="card quiz-stack-section">
           <div className="quiz-stack-header" onClick={() => setQuizzesVisible(v => !v)}>
             <h2 className="card-title" style={{ marginBottom: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
               Past Quizzes
@@ -542,10 +543,10 @@ export default function GeneratorPage() {
         </section>}
 
         {/* FAQ */}
-        <section className="section-faq reveal reveal-card">
+        <section className="section-faq">
           <h2 className="section-title" style={{ marginBottom: 'var(--spacing-xl)' }}>FAQs</h2>
           {FAQS.map((faq, i) => (
-            <div key={i} className={`faq-item reveal-card ${faqOpen.has(i) ? 'open' : ''}`}>
+            <div key={i} className={`faq-item ${faqOpen.has(i) ? 'open' : ''}`}>
               <div className="faq-header" onClick={() => toggleFaq(i)}>{faq.q}</div>
               <div className="faq-body"><p>{faq.a}</p></div>
             </div>

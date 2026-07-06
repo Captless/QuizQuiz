@@ -1319,39 +1319,6 @@ header {
   background: linear-gradient(90deg, transparent, var(--border), transparent);
 }
 
-/* ===== Scroll Reveal (sections) ===== */
-.reveal {
-  transform: translateY(0);
-  transition: transform 0.5s ease-out;
-}
-.reveal.show {
-  transform: translateY(-15px);
-}
-@media (prefers-reduced-motion: reduce) {
-  .reveal {
-    transition: none;
-  }
-  .reveal.show {
-    transform: none;
-  }
-}
-
-/* ===== Scroll‑Driven Slide‑Up (cards) ===== */
-.reveal-card {
-  transform: translateY(var(--reveal-offset, 30px));
-  transition: transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
-  will-change: transform;
-}
-.reveal-card[data-revealed="true"] {
-  --reveal-offset: 0px;
-}
-@media (prefers-reduced-motion: reduce) {
-  .reveal-card {
-    transition: none;
-    --reveal-offset: 0px;
-  }
-}
-
 /* ===== Utility ===== */
 .hidden { display: none !important; }
 .mt-2 { margin-top: 8px; }

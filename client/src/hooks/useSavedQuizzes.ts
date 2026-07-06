@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useAuth } from './useAuth'
 import { supabase } from '../services/supabase'
 import { getQuizzes, saveQuizToServer, deleteQuizFromServer } from '../services/api'
 import type { QuizEntry } from '../types'
@@ -11,16 +10,12 @@ async function authHeaders(): Promise<Record<string, string>> {
 }
 
 export function useSavedQuizzes() {
-  const { user } = useAuth()
   const [quizzes, setQuizzes] = useState<QuizEntry[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const loadQuizzes = useCallback(async () => {
-    if (!user) {
-      setQuizzes([])
-      return
-    }
     setLoading(true)
     setError(null)
     try {
@@ -44,11 +39,18 @@ export function useSavedQuizzes() {
     } finally {
       setLoading(false)
     }
-  }, [user])
+  }, [])
 
   useEffect(() => {
     loadQuizzes()
-  }, [loadQuizzes])
+  }, [loadQuizzes, refreshKey])
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      setRefreshKey(k => k + 1)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
 
   const addQuiz = useCallback(async (entry: QuizEntry) => {
     setQuizzes(prev => [entry, ...prev])
@@ -86,5 +88,9 @@ export function useSavedQuizzes() {
     }
   }, [])
 
-  return { quizzes, loading, error, addQuiz, deleteQuiz, updateQuiz }
+  const refreshQuizzes = useCallback(() => {
+    setRefreshKey(k => k + 1)
+  }, [])
+
+  return { quizzes, loading, error, addQuiz, deleteQuiz, updateQuiz, refreshQuizzes }
 }
