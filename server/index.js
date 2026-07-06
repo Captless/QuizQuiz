@@ -53,6 +53,7 @@ app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
+app.set('trust proxy', 1);
 
 /* ===== Rate Limiting ===== */
 const apiLimiter = rateLimit({
