@@ -105,5 +105,5 @@ export function useAuth() {
     if (v) refreshUsage()
   }
 
-  return { user, loading, paid, usageCount, signIn, signOut, incrementUsage, setPaidStatus, refreshUsage }
+  return { user, loading, paid, usageCount, signIn, signOut, incrementUsage, setPaidStatus, refreshUsage, setUsageCount }
 }

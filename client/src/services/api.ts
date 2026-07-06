@@ -13,7 +13,7 @@ export async function generateQuiz(
   num: number,
   file?: File,
   gradeLevel?: string
-): Promise<any[]> {
+): Promise<{ questions: any[]; usageCount: number }> {
   let url = '/api/generate'
   let body: any
   const headers: Record<string, string> = { ...await authHeaders() }
@@ -37,7 +37,7 @@ export async function generateQuiz(
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Failed to generate quiz')
   if (!data.questions?.length) throw new Error('No questions returned')
-  return data.questions
+  return { questions: data.questions, usageCount: data.usageCount ?? 0 }
 }
 
 export async function generateAdaptiveQuiz(

@@ -61,7 +61,7 @@ const FAQS = [
 ]
 
 export default function GeneratorPage() {
-  const { user, loading: authLoading, signIn, signOut, incrementUsage, setPaidStatus, paid: isPaid, usageCount, refreshUsage } = useAuth()
+  const { user, loading: authLoading, signIn, signOut, setPaidStatus, paid: isPaid, usageCount, setUsageCount } = useAuth()
   const remainingFree = Math.max(0, 3 - usageCount)
   const outOfFreeQuota = !isPaid && usageCount >= 3
   const { quizzes, loading: quizzesLoading, addQuiz, deleteQuiz, updateQuiz, refreshQuizzes } = useSavedQuizzes()
@@ -157,9 +157,11 @@ export default function GeneratorPage() {
     }, 1000)
 
     try {
-      const questions: QuizQuestion[] = file
-        ? []
+      const genResult = file
+        ? null
         : await apiGenerate(topic, difficulty, typeStr, isPaid ? num : Math.min(10, num), undefined, grade)
+      const questions: QuizQuestion[] = genResult?.questions ?? []
+      const serverUsageCount = genResult?.usageCount ?? 0
 
       const resolvedTopic = topic || file?.name?.replace(/\.(pdf|pptx)$/i, '') || 'Untitled Quiz'
       const entryId = `q_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
@@ -181,13 +183,12 @@ export default function GeneratorPage() {
         showScore: false,
       }
 
-      if (!isPaid) {
-        await incrementUsage()
-        await refreshUsage()
-      }
-
       const saved = await addQuiz(entry)
       if (saved) {
+        if (!isPaid) {
+          setUsageCount(serverUsageCount)
+          localStorage.setItem('quikquiz_usage', String(serverUsageCount))
+        }
         setQuizzesVisible(true)
         document.querySelector('.quiz-stack-section')?.scrollIntoView({ behavior: 'smooth' })
         await refreshQuizzes()
@@ -202,7 +203,7 @@ export default function GeneratorPage() {
       setGenerating(false)
       setGenProgress('')
     }
-  }, [generating, user, signIn, outOfFreeQuota, isPaid, topic, file, difficulty, num, format, types, timerSeconds, subject, quizzes.length, addQuiz, incrementUsage, refreshUsage, refreshQuizzes])
+  }, [generating, user, signIn, outOfFreeQuota, isPaid, topic, file, difficulty, num, format, types, timerSeconds, subject, quizzes.length, addQuiz, serverUsageCount, setUsageCount, refreshQuizzes])
 
   const handleShare = useCallback(async (entry: QuizEntry) => {
     try {

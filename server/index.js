@@ -400,7 +400,9 @@ app.post('/api/generate', requireUser, validateGenerateBody, async (req, res) =>
   for (const model of FALLBACK_MODELS) {
     try {
       const questions = await callModel(model, prompt, origin);
-      return res.json({ questions });
+      let uc = profile?.usage_count || 0;
+      if (!isPaid) uc = await incrementUsage(req.user.id, req.user.email, req.user.user_metadata?.full_name || req.user.email, req.user.user_metadata?.avatar_url);
+      return res.json({ questions, usageCount: uc });
     } catch (err) {
       errors.push({ model, error: err.message });
       if (err.fatal) break;
@@ -410,7 +412,9 @@ app.post('/api/generate', requireUser, validateGenerateBody, async (req, res) =>
   if (process.env.GROQ_KEY) {
     try {
       const questions = await callGroq(prompt);
-      return res.json({ questions });
+      let uc = profile?.usage_count || 0;
+      if (!isPaid) uc = await incrementUsage(req.user.id, req.user.email, req.user.user_metadata?.full_name || req.user.email, req.user.user_metadata?.avatar_url);
+      return res.json({ questions, usageCount: uc });
     } catch (err) {
       errors.push({ model: 'groq/llama-3.3-70b-versatile', error: err.message });
     }
@@ -484,7 +488,9 @@ app.post('/api/generate-from-file', requireUser, (req, res, next) => {
   for (const model of FALLBACK_MODELS) {
     try {
       const questions = await callModel(model, prompt, origin);
-      return res.json({ questions });
+      let uc = profile?.usage_count || 0;
+      if (!isPaid) uc = await incrementUsage(req.user.id, req.user.email, req.user.user_metadata?.full_name || req.user.email, req.user.user_metadata?.avatar_url);
+      return res.json({ questions, usageCount: uc });
     } catch (err) {
       errors.push({ model, error: err.message });
       if (err.fatal) break;
@@ -494,7 +500,9 @@ app.post('/api/generate-from-file', requireUser, (req, res, next) => {
   if (process.env.GROQ_KEY) {
     try {
       const questions = await callGroq(prompt);
-      return res.json({ questions });
+      let uc = profile?.usage_count || 0;
+      if (!isPaid) uc = await incrementUsage(req.user.id, req.user.email, req.user.user_metadata?.full_name || req.user.email, req.user.user_metadata?.avatar_url);
+      return res.json({ questions, usageCount: uc });
     } catch (err) {
       errors.push({ model: 'groq/llama-3.3-70b-versatile', error: err.message });
     }
