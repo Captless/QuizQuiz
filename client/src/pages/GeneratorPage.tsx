@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react'
 import { useAuth } from '../hooks/useAuth'
-import { useQuota } from '../hooks/useQuota'
 import { useSavedQuizzes } from '../hooks/useSavedQuizzes'
 import { useScrollReveal } from '../hooks/useScrollReveal'
 import {
@@ -63,8 +62,9 @@ const FAQS = [
 ]
 
 export default function GeneratorPage() {
-  const { user, loading: authLoading, signIn, signOut, incrementUsage, setPaidStatus } = useAuth()
-  const { isPaid, remainingFree, outOfFreeQuota } = useQuota()
+  const { user, loading: authLoading, signIn, signOut, incrementUsage, setPaidStatus, paid: isPaid, usageCount } = useAuth()
+  const remainingFree = Math.max(0, 3 - usageCount)
+  const outOfFreeQuota = !isPaid && usageCount >= 3
   const { quizzes, loading: quizzesLoading, addQuiz, deleteQuiz, updateQuiz } = useSavedQuizzes()
 
   const [subject, setSubject] = useState('')

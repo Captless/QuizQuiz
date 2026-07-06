@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../services/supabase'
 import { getUsage, incrementUsage as apiIncrementUsage } from '../services/api'
 import type { User } from '../types'
@@ -16,6 +16,7 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
   const [paid, setPaid] = useState(getLocalPaid)
   const [usageCount, setUsageCount] = useState(getLocalUsage)
+  const userIdRef = useRef<string | null>(null)
 
   const refreshUsage = async () => {
     try {
@@ -46,7 +47,11 @@ export function useAuth() {
       const newUser = session?.user
         ? { id: session.user.id, email: session.user.email ?? '', name: session.user.user_metadata?.full_name ?? '', avatar_url: session.user.user_metadata?.avatar_url }
         : null
-      setUser(newUser)
+      const newId = newUser?.id ?? null
+      if (newId !== userIdRef.current) {
+        userIdRef.current = newId
+        setUser(newUser)
+      }
       setLoading(false)
       if (newUser) {
         localStorage.setItem('quikquiz_user', JSON.stringify({ name: newUser.name, email: newUser.email, picture: newUser.avatar_url }))
@@ -59,6 +64,11 @@ export function useAuth() {
       const newUser = session?.user
         ? { id: session.user.id, email: session.user.email ?? '', name: session.user.user_metadata?.full_name ?? '', avatar_url: session.user.user_metadata?.avatar_url }
         : null
+      const newId = newUser?.id ?? null
+      if (newId !== userIdRef.current) {
+        userIdRef.current = newId
+        setUser(newUser)
+      }
       if (newUser) {
         const prev = JSON.parse(localStorage.getItem('quikquiz_user') || 'null')
         if (prev?.email && prev.email !== newUser.email) {
@@ -76,7 +86,6 @@ export function useAuth() {
         setPaid(false)
         setUsageCount(0)
       }
-      setUser(newUser)
     })
 
     return () => subscription.unsubscribe()

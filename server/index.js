@@ -761,7 +761,7 @@ app.get('/api/insights/summary', requireUser, async (req, res) => {
     let totalSubmissions = 0;
     let totalCorrect = 0;
     let totalQuestions = 0;
-    const topicAccuracy: Record<string, { correct: number; total: number }> = {};
+    const topicAccuracy = {};
 
     for (const quizId of quizIds) {
       const results = await getResults(quizId);
@@ -818,7 +818,7 @@ app.get('/api/insights/weak-topics', requireUser, async (req, res) => {
 
   try {
     const quizzes = await getUserQuizzes(req.user.id);
-    const topicAccuracy: Record<string, { correct: number; total: number; quizzes: string[] }> = {};
+    const topicAccuracy = {};
 
     for (const quiz of quizzes) {
       const results = await getResults(quiz.id);
