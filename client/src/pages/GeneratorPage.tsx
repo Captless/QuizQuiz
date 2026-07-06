@@ -186,11 +186,15 @@ export default function GeneratorPage() {
         await refreshUsage()
       }
 
-      await addQuiz(entry)
-      setQuizzesVisible(true)
-      document.querySelector('.quiz-stack-section')?.scrollIntoView({ behavior: 'smooth' })
-      await refreshQuizzes()
-      addToast(isPaid ? 'Quiz generated successfully!' : 'Free demo quiz generated! Upgrade to unlock unlimited.', 'success')
+      const saved = await addQuiz(entry)
+      if (saved) {
+        setQuizzesVisible(true)
+        document.querySelector('.quiz-stack-section')?.scrollIntoView({ behavior: 'smooth' })
+        await refreshQuizzes()
+        addToast(isPaid ? 'Quiz generated successfully!' : 'Free demo quiz generated! Upgrade to unlock unlimited.', 'success')
+      } else {
+        addToast('Quiz was generated but could not be saved.', 'warning')
+      }
     } catch (err: any) {
       addToast(err.message || 'Failed to generate quiz.', 'error')
     } finally {

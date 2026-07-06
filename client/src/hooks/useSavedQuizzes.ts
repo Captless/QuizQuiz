@@ -52,7 +52,7 @@ export function useSavedQuizzes() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const addQuiz = useCallback(async (entry: QuizEntry) => {
+  const addQuiz = useCallback(async (entry: QuizEntry): Promise<boolean> => {
     setQuizzes(prev => [entry, ...prev])
     try {
       const serverId = await saveQuizToServer({
@@ -65,8 +65,11 @@ export function useSavedQuizzes() {
         format: entry.studentFormat,
       })
       setQuizzes(prev => prev.map(q => q.id === entry.id ? { ...q, id: serverId, shareId: serverId } : q))
+      return true
     } catch (err: any) {
       console.error('Failed to persist quiz:', err)
+      setQuizzes(prev => prev.filter(q => q.id !== entry.id))
+      return false
     }
   }, [])
 
