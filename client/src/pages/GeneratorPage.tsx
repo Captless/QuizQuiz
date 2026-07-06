@@ -81,6 +81,7 @@ export default function GeneratorPage() {
   const [genProgress, setGenProgress] = useState('')
   const [showPaywall, setShowPaywall] = useState(false)
   const [toasts, setToasts] = useState<{ id: number; msg: string; type: string }[]>([])
+  const [quizzesVisible, setQuizzesVisible] = useState(true)
   const [dark, setDark] = useState(() => localStorage.getItem('quikquiz_dark') === 'true' || (!localStorage.getItem('quikquiz_dark') && window.matchMedia('(prefers-color-scheme: dark)').matches))
   const toastId = useRef(0)
   const [stepper, setStepper] = useState(1)
@@ -370,10 +371,10 @@ export default function GeneratorPage() {
 
         <div className="hero-divider" />
 
-        {/* Value Cards */}
-        <section className="value-cards reveal reveal-card">
+          {/* Value Cards */}
+        <section className="value-cards">
           {VALUE_ITEMS.map(v => (
-            <div className="value-card reveal-card" key={v.title}>
+            <div className="value-card" key={v.title}>
               {v.icon}
               <h3>{v.title}</h3>
               <p>{v.desc}</p>
@@ -506,23 +507,37 @@ export default function GeneratorPage() {
         </section>
 
         {/* Saved Quizzes */}
-        <section className={`card reveal reveal-card quiz-stack-section ${quizzes.length === 0 ? 'hidden' : ''}`}>
-          <h2 className="card-title">Your Quizzes</h2>
-          {quizzesLoading ? (
-            <Spinner text="Loading quizzes..." />
-          ) : (
-            <Suspense fallback={<Spinner text="Loading quizzes..." />}>
-              {quizzes.length > 0 && (
-                <QuizStack
-                  entries={quizzes}
-                  onDelete={id => deleteQuiz(id)}
-                  onUpdate={(id, updates) => updateQuiz(id, updates)}
-                  onShare={handleShare}
-                  onResults={handleResults}
-                  onExportPDF={handleExportPDF}
-                />
-              )}
-            </Suspense>
+        <section className="card reveal reveal-card quiz-stack-section">
+          <div className="quiz-stack-header" onClick={() => setQuizzesVisible(v => !v)}>
+            <h2 className="card-title" style={{ marginBottom: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              Past Quizzes
+              <span className="quiz-count-badge">{quizzes.length}</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '4px' }}>{quizzesVisible ? '▼' : '▶'}</span>
+            </h2>
+          </div>
+          {quizzesVisible && (
+            quizzesLoading ? (
+              <Spinner text="Loading quizzes..." />
+            ) : (
+              <Suspense fallback={<Spinner text="Loading quizzes..." />}>
+                {quizzes.length > 0 ? (
+                  <QuizStack
+                    entries={quizzes}
+                    onDelete={id => deleteQuiz(id)}
+                    onUpdate={(id, updates) => updateQuiz(id, updates)}
+                    onShare={handleShare}
+                    onResults={handleResults}
+                    onExportPDF={handleExportPDF}
+                  />
+                ) : (
+                  <div className="quiz-stack-empty" style={{ marginTop: '20px' }}>
+                    <div className="quiz-stack-empty-icon">—</div>
+                    <p className="quiz-stack-empty-title">No quizzes yet</p>
+                    <p className="quiz-stack-empty-text">Generate your first quiz above and it will appear here.</p>
+                  </div>
+                )}
+              </Suspense>
+            )
           )}
         </section>
 

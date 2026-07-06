@@ -94,9 +94,6 @@ export function useAuth() {
   const siteUrl = (import.meta.env.VITE_SITE_URL || window.location.origin).replace(/\/$/, '')
   const signIn = () => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: siteUrl } })
   const signOut = () => {
-    localStorage.removeItem('quikquiz_user')
-    setPaid(false)
-    setUsageCount(0)
     supabase.auth.signOut()
   }
 
