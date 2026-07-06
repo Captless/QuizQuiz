@@ -70,6 +70,8 @@ export function useAuth() {
         setUser(newUser)
       }
       if (newUser) {
+        setUsageCount(getLocalUsage())
+        setPaid(getLocalPaid())
         const prev = JSON.parse(localStorage.getItem('quikquiz_user') || 'null')
         if (prev?.email && prev.email !== newUser.email) {
           localStorage.removeItem('quikquiz_paid')
@@ -89,7 +91,7 @@ export function useAuth() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin
+  const siteUrl = (import.meta.env.VITE_SITE_URL || window.location.origin).replace(/\/$/, '')
   const signIn = () => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: siteUrl } })
   const signOut = () => {
     localStorage.removeItem('quikquiz_user')
