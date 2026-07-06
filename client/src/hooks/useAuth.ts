@@ -100,17 +100,20 @@ export function useAuth() {
     supabase.auth.signOut()
   }
 
-  const incrementUsage = async (): Promise<boolean> => {
+  const incrementUsage = async (): Promise<void> => {
+    const prev = parseInt(localStorage.getItem('quikquiz_usage') || '0', 10)
+    const next = prev + 1
+    setUsageCount(next)
+    localStorage.setItem('quikquiz_usage', String(next))
     try {
       const serverCount = await apiIncrementUsage()
-      const currentLocal = parseInt(localStorage.getItem('quikquiz_usage') || '0', 10)
-      const newCount = Math.max(serverCount, currentLocal + 1)
-      setUsageCount(newCount)
-      localStorage.setItem('quikquiz_usage', String(newCount))
-      return true
-    } catch (err) {
-      console.warn('Failed to persist usage count on server:', err)
-      return false
+      const reconciled = Math.max(serverCount, next)
+      if (reconciled !== next) {
+        setUsageCount(reconciled)
+        localStorage.setItem('quikquiz_usage', String(reconciled))
+      }
+    } catch {
+      // Server sync failed — local count is already correct for this session
     }
   }
 

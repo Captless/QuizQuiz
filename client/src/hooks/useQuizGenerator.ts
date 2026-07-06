@@ -54,10 +54,7 @@ export function useQuizGenerator() {
     onProgress?.('Saving...')
 
     if (!isPaid) {
-      const ok = await incrementUsage()
-      if (!ok) {
-        console.warn('Failed to record usage on server')
-      }
+      void incrementUsage()
     }
 
     return {

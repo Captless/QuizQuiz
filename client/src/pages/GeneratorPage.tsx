@@ -184,8 +184,7 @@ export default function GeneratorPage() {
       }
 
       if (!isPaid) {
-        const ok = await incrementUsage()
-        if (!ok) addToast('Could not record usage. Your quota may not update.', 'warning')
+        void incrementUsage()
       }
 
       await addQuiz(entry)
