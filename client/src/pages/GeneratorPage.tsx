@@ -185,7 +185,7 @@ export default function GeneratorPage() {
       }
 
       if (!isPaid) {
-        void incrementUsage()
+        await incrementUsage()
       }
 
       await addQuiz(entry)
@@ -507,7 +507,7 @@ export default function GeneratorPage() {
         </section>
 
         {/* Saved Quizzes */}
-        <section className="card reveal reveal-card quiz-stack-section">
+        {user && <section className="card reveal reveal-card quiz-stack-section">
           <div className="quiz-stack-header" onClick={() => setQuizzesVisible(v => !v)}>
             <h2 className="card-title" style={{ marginBottom: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
               Past Quizzes
@@ -539,7 +539,7 @@ export default function GeneratorPage() {
               </Suspense>
             )
           )}
-        </section>
+        </section>}
 
         {/* FAQ */}
         <section className="section-faq reveal reveal-card">

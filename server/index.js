@@ -381,6 +381,8 @@ async function callGroq(prompt, retries = 2) {
 app.post('/api/generate', requireUser, validateGenerateBody, async (req, res) => {
   const { topic, difficulty, type, num, gradeLevel } = req.body;
 
+  await ensureProfile(req.user.id, req.user.email, req.user.user_metadata?.full_name, req.user.user_metadata?.avatar_url);
+
   // Server-side quota enforcement
   const profile = await getProfile(req.user.id, req.user.email);
   const isPaid = profile?.subscription_status === 'active';
@@ -432,6 +434,8 @@ app.post('/api/generate-from-file', requireUser, (req, res, next) => {
 }, validateGenerateBody, async (req, res) => {
   const { topic, difficulty, type, num, gradeLevel } = req.body;
   const file = req.file;
+
+  await ensureProfile(req.user.id, req.user.email, req.user.user_metadata?.full_name, req.user.user_metadata?.avatar_url);
 
   // Server-side quota enforcement
   const profile = await getProfile(req.user.id, req.user.email);
@@ -1285,6 +1289,16 @@ async function getProfile(userId, email) {
   return data;
 }
 
+async function ensureProfile(userId, email, name, avatarUrl) {
+  if (!SUPABASE_ENABLED || !supabaseAdmin || useLocalFallback) return;
+  const profile = await getProfile(userId, email);
+  if (!profile) {
+    await supabaseAdmin.from('profiles').upsert({
+      id: userId, email, name: name || email, avatar_url: avatarUrl
+    }, { onConflict: 'id' });
+  }
+}
+
 async function incrementUsage(userId, email, name, avatarUrl) {
   if (useLocalFallback) {
     return await incFallbackUsage(email || userId);
@@ -1438,6 +1452,7 @@ app.get('/api/quizzes', requireUser, async (req, res) => {
 
 // Save a new quiz
 app.post('/api/quizzes', requireUser, async (req, res) => {
+  await ensureProfile(req.user.id, req.user.email, req.user.user_metadata?.full_name, req.user.user_metadata?.avatar_url);
   const { title, topic, subject, difficulty, questions, timerSeconds, format } = req.body;
   if (!questions?.length) return res.status(400).json({ error: 'Questions are required.' });
 
