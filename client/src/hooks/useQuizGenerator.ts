@@ -21,7 +21,7 @@ interface GenerateResult {
 }
 
 export function useQuizGenerator() {
-  const { signIn, incrementUsage } = useAuth()
+  const { signIn } = useAuth()
   const { isPaid, isSignedIn, outOfFreeQuota, remainingFree } = useQuota()
 
   const generate = useCallback(async (
@@ -44,7 +44,7 @@ export function useQuizGenerator() {
     const finalNum = isPaid ? formData.num : Math.min(10, formData.num)
     onProgress?.('Generating your quiz...')
 
-    const questions = await apiGenerate(
+    const { questions } = await apiGenerate(
       formData.topic,
       formData.difficulty,
       formData.typeStr,
@@ -53,10 +53,6 @@ export function useQuizGenerator() {
 
     onProgress?.('Saving...')
 
-    if (!isPaid) {
-      void incrementUsage()
-    }
-
     return {
       topic: formData.topic,
       difficulty: formData.difficulty,
@@ -64,7 +60,7 @@ export function useQuizGenerator() {
       timerSeconds: formData.timerSeconds,
       format: formData.format,
     }
-  }, [isSignedIn, signIn, outOfFreeQuota, isPaid, incrementUsage])
+  }, [isSignedIn, signIn, outOfFreeQuota, isPaid])
 
   return {
     generate,

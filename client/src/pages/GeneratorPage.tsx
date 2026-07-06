@@ -203,7 +203,7 @@ export default function GeneratorPage() {
       setGenerating(false)
       setGenProgress('')
     }
-  }, [generating, user, signIn, outOfFreeQuota, isPaid, topic, file, difficulty, num, format, types, timerSeconds, subject, quizzes.length, addQuiz, serverUsageCount, setUsageCount, refreshQuizzes])
+  }, [generating, user, signIn, outOfFreeQuota, isPaid, topic, file, difficulty, num, format, types, timerSeconds, subject, quizzes.length, addQuiz, setUsageCount, refreshQuizzes])
 
   const handleShare = useCallback(async (entry: QuizEntry) => {
     try {
