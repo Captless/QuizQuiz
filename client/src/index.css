@@ -112,7 +112,7 @@ body {
   flex-direction: column;
   transition: background var(--transition), color var(--transition);
 }
-#root { display: flex; flex-direction: column; min-height: 100vh; }
+#root { display: flex; flex-direction: column; min-height: 100vh; overflow-x: clip; }
 main { flex: 1 0 auto; }
 body::-webkit-scrollbar { width: 6px; }
 body::-webkit-scrollbar-track { background: transparent; }
@@ -145,6 +145,7 @@ header {
 }
 .card:hover { box-shadow: var(--shadow-md); border-color: var(--accent-light); }
 .card-title { font-family: var(--font-mono); font-size: 19px; font-weight: 600; margin-bottom: 20px; color: var(--text-primary); }
+#generatorSection { margin-top: var(--spacing-lg); }
 
 /* ===== Buttons ===== */
 .btn {
@@ -607,7 +608,9 @@ header {
 .hero {
   position: relative;
   text-align: center;
-  padding: 32px 0;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  padding: 0 0 32px;
   overflow: hidden;
 }
 
@@ -759,6 +762,7 @@ header {
 
 /* ===== How It Works ===== */
 .section-how {
+  margin-top: var(--spacing-lg);
   margin-bottom: 64px;
 }
 
@@ -766,7 +770,7 @@ header {
 .main-container {
   max-width: var(--max-content-width, 1120px);
   margin: 0 auto;
-  padding: var(--spacing-lg) var(--spacing-base);
+  padding: 0 var(--spacing-base) var(--spacing-lg);
 }
 
 /* ===== Split Hero ===== */
@@ -841,6 +845,7 @@ header {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--spacing-xl);
+  margin-top: var(--spacing-lg);
   margin-bottom: var(--spacing-lg);
 }
 .value-card {
