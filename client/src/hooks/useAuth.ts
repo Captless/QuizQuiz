@@ -27,9 +27,9 @@ export function useAuth() {
       // (refreshUsage may be called much later after a token refresh).
       const currentUsage = parseInt(localStorage.getItem('quikquiz_usage') || '0', 10)
 
-      // Only overwrite if the server value is >= the current persisted count,
+      // Only overwrite if the server value is strictly greater than the local value,
       // or the user is now paid (paid status is always authoritative).
-      const shouldUpdate = u.paid || u.usageCount >= currentUsage
+      const shouldUpdate = u.paid || u.usageCount > currentUsage
 
       if (shouldUpdate) {
         setUsageCount(u.usageCount)
@@ -95,8 +95,6 @@ export function useAuth() {
   const signIn = () => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: siteUrl } })
   const signOut = () => {
     localStorage.removeItem('quikquiz_user')
-    localStorage.removeItem('quikquiz_paid')
-    localStorage.removeItem('quikquiz_usage')
     setPaid(false)
     setUsageCount(0)
     supabase.auth.signOut()
@@ -105,8 +103,10 @@ export function useAuth() {
   const incrementUsage = async (): Promise<boolean> => {
     try {
       const serverCount = await apiIncrementUsage()
-      setUsageCount(serverCount)
-      localStorage.setItem('quikquiz_usage', String(serverCount))
+      const currentLocal = parseInt(localStorage.getItem('quikquiz_usage') || '0', 10)
+      const newCount = Math.max(serverCount, currentLocal + 1)
+      setUsageCount(newCount)
+      localStorage.setItem('quikquiz_usage', String(newCount))
       return true
     } catch (err) {
       console.warn('Failed to persist usage count on server:', err)

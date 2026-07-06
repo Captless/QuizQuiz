@@ -15,7 +15,7 @@ const { validateGenerateBody, validateQuizSaveBody } = require('./utils/validate
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 /* ===== Supabase availability check ===== */
-const SUPABASE_ENABLED = process.env.SUPABASE_ENABLED === 'true' && !!process.env.SUPABASE_URL && !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_ENABLED = process.env.SUPABASE_ENABLED !== 'false' && !!process.env.SUPABASE_URL && !!process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const useLocalFallback = process.env.USE_LOCAL_FALLBACK === 'true';
 let getFallbackUsage, incFallbackUsage, setFallbackPaid;

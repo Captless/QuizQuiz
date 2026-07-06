@@ -52,7 +52,7 @@
 
   /* Spacing */
   --spacing-base: 8px;
-  --spacing-lg: 64px;
+  --spacing-lg: 32px;
   --spacing-xl: 24px;
 
   /* Layout */
@@ -607,7 +607,7 @@ header {
 .hero {
   position: relative;
   text-align: center;
-  padding: 56px 0 48px;
+  padding: 32px 0;
   overflow: hidden;
 }
 
@@ -694,7 +694,7 @@ header {
   position: relative;
   z-index: 1;
   font-family: var(--font-mono);
-  font-size: 36px;
+  font-size: clamp(28px, 5vw, 42px);
   font-weight: 700;
   line-height: 1.15;
   margin-bottom: 16px;
@@ -708,7 +708,7 @@ header {
   font-family: var(--font-mono);
   font-size: 15px;
   color: var(--text-secondary);
-  max-width: 640px;
+  max-width: min(640px, 90%);
   margin: 0 auto 16px;
   line-height: 1.7;
   padding: 0 16px;
@@ -720,7 +720,7 @@ header {
   font-family: var(--font-mono);
   font-size: 13px;
   color: var(--text-muted);
-  max-width: 640px;
+  max-width: min(640px, 90%);
   margin: 0 auto 24px;
   line-height: 1.6;
   padding: 0 16px;
@@ -1282,7 +1282,7 @@ header {
 .hero-divider {
   border: none;
   height: 1px;
-  margin: 48px 0;
+  margin: 24px 0;
   background: linear-gradient(90deg, transparent, var(--border), transparent);
 }
 
