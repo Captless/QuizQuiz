@@ -43,6 +43,13 @@ export function useAuth() {
       }
       setLoading(false)
       if (newUser) {
+        const prev = JSON.parse(localStorage.getItem('quikquiz_user') || 'null')
+        if (!prev || prev.email !== newUser.email) {
+          localStorage.removeItem('quikquiz_paid')
+          localStorage.removeItem('quikquiz_usage')
+          setPaid(false)
+          setUsageCount(0)
+        }
         localStorage.setItem('quikquiz_user', JSON.stringify({ name: newUser.name, email: newUser.email, picture: newUser.avatar_url }))
         refreshUsage()
       }

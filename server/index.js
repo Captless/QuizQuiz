@@ -48,6 +48,36 @@ const sharedResults = new Map();
 /* ===== Middleware ===== */
 const corsOrigin = process.env.CORS_ORIGIN || undefined;
 app.use(cors({ origin: corsOrigin, credentials: true }));
+
+/* ===== Stripe webhook (must be before express.json() for raw body) ===== */
+app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  if (!stripe || !process.env.STRIPE_WEBHOOK_SECRET) {
+    return res.status(200).json({ received: true });
+  }
+  const sig = req.headers['stripe-signature'];
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    paidSessions.set(session.id, { paid: true, email: session.customer_details?.email, timestamp: Date.now() });
+    if (session.metadata?.user_id && supabaseAdmin) {
+      const custId = typeof session.customer === 'string' ? session.customer : session.customer?.id;
+      setSubscription(session.metadata.user_id, 'active', custId);
+    }
+  }
+  if (event.type === 'customer.subscription.deleted') {
+    const subscription = event.data.object;
+    if (subscription.metadata?.user_id && supabaseAdmin) {
+      setSubscription(subscription.metadata.user_id, 'inactive');
+    }
+  }
+  res.json({ received: true });
+});
+
 app.use(express.json());
 app.use(helmet({
   contentSecurityPolicy: false,
@@ -66,34 +96,7 @@ app.use('/api/generate-from-file', apiLimiter);
 app.use('/api/suggest-topics', apiLimiter);
 app.use('/api/quiz/save', apiLimiter);
 
-/* ===== Stripe webhook ===== */
-app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-  if (!stripe || !process.env.STRIPE_WEBHOOK_SECRET) {
-    return res.status(200).json({ received: true });
-  }
-  const sig = req.headers['stripe-signature'];
-  let event;
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-  } catch (err) {
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    paidSessions.set(session.id, { paid: true, email: session.customer_details?.email, timestamp: Date.now() });
-    // If user is logged in, update their subscription in Supabase
-    if (session.metadata?.user_id && supabaseAdmin) {
-      setSubscription(session.metadata.user_id, 'active', session.customer);
-    }
-  }
-  if (event.type === 'customer.subscription.deleted') {
-    const subscription = event.data.object;
-    if (subscription.metadata?.user_id && supabaseAdmin) {
-      setSubscription(subscription.metadata.user_id, 'inactive');
-    }
-  }
-  res.json({ received: true });
-});
+
 
 /* ===== Create Stripe Checkout Session ===== */
 app.post('/api/create-checkout-session', async (req, res) => {
@@ -115,6 +118,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
         quantity: 1
       }],
       metadata: user ? { user_id: user.id } : {},
+      subscription_data: user ? { metadata: { user_id: user.id } } : {},
       success_url: `${req.headers.origin}/?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.origin}/`
     });
