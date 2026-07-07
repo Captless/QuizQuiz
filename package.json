@@ -12,7 +12,7 @@
     "build": "npm install --include=dev && npm run build -w client",
     "start": "npm start -w server",
     "lint": "npm run lint -w client",
-    "postinstall": "node -e \"try { require('fs').mkdirSync(require('path').join(__dirname, 'data'), {recursive: true}); require('fs').writeFileSync(require('path').join(__dirname, 'data', 'usage.json'), '{}', 'utf-8'); } catch(e) { console.error('Failed to create data directory:', e.message); }\"",
+    
     "mcp": "tsx scripts/mcp/index.ts",
     "mcp:deploy": "tsx scripts/mcp/index.ts deploy --yes",
     "mcp:dry": "tsx scripts/mcp/index.ts deploy --dry-run",

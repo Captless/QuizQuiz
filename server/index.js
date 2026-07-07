@@ -1316,7 +1316,6 @@ async function incrementUsage(userId, email, name, avatarUrl) {
   if (!SUPABASE_ENABLED) return 0;
   // Try the atomic Postgres function: UPDATE profiles SET usage_count = usage_count + 1 WHERE id = user_id RETURNING usage_count
   const { data, error } = await supabaseAdmin.rpc('increment_usage', { user_id: userId });
-  console.log('[usage] RPC result:', { data, error: error?.message || null });
   if (!error && data != null) return data;
   if (error) console.error('[usage] RPC error:', error);
   // Fallback: upsert directly
@@ -1338,7 +1337,6 @@ async function incrementUsage(userId, email, name, avatarUrl) {
       subscription_status: profile?.subscription_status || 'inactive'
     }, { onConflict: 'id' });
   if (upsertErr) console.error('[usage] fallback upsert error:', upsertErr);
-  console.log('[usage] returning current:', current);
   return current;
 }
 
@@ -1426,7 +1424,6 @@ app.get('/api/usage', requireUser, async (req, res) => {
     if (!error) profile = data;
     else console.error('[usage] upsert error in GET /api/usage:', error);
   }
-  console.log('[usage] GET /api/usage returning:', { usageCount: profile?.usage_count, paid: profile?.subscription_status });
   res.json({ usageCount: profile?.usage_count || 0, paid: profile?.subscription_status === 'active' });
 });
 
