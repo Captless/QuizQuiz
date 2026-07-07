@@ -61,7 +61,7 @@ const FAQS = [
 ]
 
 export default function GeneratorPage() {
-  const { user, loading: authLoading, signIn, signOut, setPaidStatus, paid: isPaid, usageCount, setUsageCount } = useAuth()
+  const { user, loading: authLoading, signIn, signOut, setPaidStatus, paid: isPaid, usageCount, setUsageCount, usageLoaded } = useAuth()
   const remainingFree = Math.max(0, 3 - usageCount)
   const outOfFreeQuota = !isPaid && usageCount >= 3
   const { quizzes, loading: quizzesLoading, addQuiz, deleteQuiz, updateQuiz, refreshQuizzes } = useSavedQuizzes()
@@ -183,7 +183,6 @@ export default function GeneratorPage() {
 
       if (!isPaid) {
         setUsageCount(serverUsageCount)
-        localStorage.setItem('quikquiz_usage', String(serverUsageCount))
       }
 
       const saved = await addQuiz(entry)
@@ -198,7 +197,6 @@ export default function GeneratorPage() {
     } catch (err: any) {
       if (err.needsUpgrade && typeof err.usageCount === 'number') {
         setUsageCount(err.usageCount)
-        localStorage.setItem('quikquiz_usage', String(err.usageCount))
         setShowPaywall(true)
         return
       }
@@ -295,7 +293,7 @@ export default function GeneratorPage() {
     addToast('Subscribed! (dev mode)', 'success')
   }, [user, signIn, setPaidStatus])
 
-  const buttonLabel = !user ? 'Sign in to generate free demo quiz' : isPaid ? 'Generate Quiz' : outOfFreeQuota ? 'Out of free generations — Upgrade' : `Generate Demo Quiz (${remainingFree} left)`
+  const buttonLabel = !user ? 'Sign in to generate free demo quiz' : !usageLoaded ? 'Loading…' : isPaid ? 'Generate Quiz' : outOfFreeQuota ? 'Out of free generations — Upgrade' : `Generate Demo Quiz (${remainingFree} left)`
 
   const stepContent = (s: number) => {
     switch (s) {
