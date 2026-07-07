@@ -59,8 +59,6 @@ export function useAuth() {
         setUser(newUser)
       }
       if (newUser) {
-        setUsageCount(getLocalUsage())
-        setPaid(getLocalPaid())
         const prev = JSON.parse(localStorage.getItem('quikquiz_user') || 'null')
         if (prev?.email && prev.email !== newUser.email) {
           localStorage.removeItem('quikquiz_paid')

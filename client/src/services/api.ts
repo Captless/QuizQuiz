@@ -35,7 +35,12 @@ export async function generateQuiz(
 
   const res = await fetch(url, { method: 'POST', headers, body })
   const data = await res.json()
-  if (!res.ok) throw new Error(data.error || 'Failed to generate quiz')
+  if (!res.ok) {
+    const err: any = new Error(data.error || 'Failed to generate quiz')
+    err.needsUpgrade = data.needsUpgrade
+    err.usageCount = data.usageCount
+    throw err
+  }
   if (!data.questions?.length) throw new Error('No questions returned')
   return { questions: data.questions, usageCount: data.usageCount ?? 0 }
 }
@@ -95,13 +100,13 @@ export async function checkPaymentStatus(sessionId: string): Promise<boolean> {
   return data.paid === true
 }
 
-export async function getUsage(): Promise<{ usageCount: number; paid: boolean }> {
+export async function getUsage(): Promise<{ usageCount: number; paid: boolean } | null> {
   try {
     const res = await fetch('/api/usage', { headers: { ...await authHeaders() } })
     if (!res.ok) throw new Error('not authorized')
     return await res.json()
   } catch {
-    return { usageCount: 0, paid: false }
+    return null
   }
 }
 

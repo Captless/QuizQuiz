@@ -28,5 +28,9 @@
     "concurrently": "^9.1.2",
     "inquirer": "^14.0.2",
     "tsx": "^4.22.5"
+  },
+  "allowScripts": {
+    "core-js@3.49.0": true,
+    "esbuild@0.28.1": true
   }
 }

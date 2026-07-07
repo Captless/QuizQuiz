@@ -157,9 +157,7 @@ export default function GeneratorPage() {
     }, 1000)
 
     try {
-      const genResult = file
-        ? null
-        : await apiGenerate(topic, difficulty, typeStr, isPaid ? num : Math.min(10, num), undefined, grade)
+      const genResult = await apiGenerate(topic, difficulty, typeStr, isPaid ? num : Math.min(10, num), file ?? undefined, grade)
       const questions: QuizQuestion[] = genResult?.questions ?? []
       const serverUsageCount = genResult?.usageCount ?? 0
 
@@ -183,12 +181,13 @@ export default function GeneratorPage() {
         showScore: false,
       }
 
+      if (!isPaid) {
+        setUsageCount(serverUsageCount)
+        localStorage.setItem('quikquiz_usage', String(serverUsageCount))
+      }
+
       const saved = await addQuiz(entry)
       if (saved) {
-        if (!isPaid) {
-          setUsageCount(serverUsageCount)
-          localStorage.setItem('quikquiz_usage', String(serverUsageCount))
-        }
         setQuizzesVisible(true)
         document.querySelector('.quiz-stack-section')?.scrollIntoView({ behavior: 'smooth' })
         await refreshQuizzes()
@@ -197,6 +196,12 @@ export default function GeneratorPage() {
         addToast('Quiz was generated but could not be saved.', 'warning')
       }
     } catch (err: any) {
+      if (err.needsUpgrade && typeof err.usageCount === 'number') {
+        setUsageCount(err.usageCount)
+        localStorage.setItem('quikquiz_usage', String(err.usageCount))
+        setShowPaywall(true)
+        return
+      }
       addToast(err.message || 'Failed to generate quiz.', 'error')
     } finally {
       clearInterval(interval)
